@@ -1,0 +1,25 @@
+[package]
+name = "lhapdf"
+version = "0.2.4"
+authors = ["Christopher Schwan <handgranaten-herbert@posteo.de>"]
+edition = "2018"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/cschwan/lhapdf"
+readme = "README.md"
+keywords = ["high-energy-physics", "physics"]
+categories = ["science"]
+description = "(Unofficial) Rust bindings for the LHAPDF C++ library"
+
+[dependencies]
+cxx = "1.0.107"
+thiserror = "1.0"
+
+[build-dependencies]
+cxx-build = "1.0.107"
+pkg-config = "0.3"
+
+[features]
+docs-only = []
+
+[package.metadata.docs.rs]
+features = [ "docs-only" ]

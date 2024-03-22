@@ -1,0 +1,44 @@
+name: Rust
+
+on: [pull_request, push]
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: '-Cinstrument-coverage'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/nnpdf/pineappl-ci:latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Run tests
+      run: |
+        # we need stderr, but we can't run test twice because it'll regenerate/modify the binaries which interferes with `llvm-cov`
+        cargo test --no-fail-fast 2> >(tee stderr 1>&2)
+        # from https://stackoverflow.com/a/51141872/812178
+        sed -i 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' stderr
+
+    - name: Generate code coverage
+      run: |
+        find . -name '*.profraw' -exec $(rustc --print target-libdir)/../bin/llvm-profdata merge -sparse -o lhapdf.profdata {} +
+        ( sed -nE 's/[[:space:]]+Running( unittests|) [^[:space:]]+ \(([^)]+)\)/\2/p' stderr | tr ' ' "\n" ) | \
+            xargs printf ' --object %s' | \
+            xargs $(rustc --print target-libdir)/../bin/llvm-cov export \
+                --ignore-filename-regex='/.cargo/registry' \
+                --ignore-filename-regex='/cargo/registry' \
+                --ignore-filename-regex='rustc' \
+                --ignore-filename-regex='lhapdf/tests' \
+                --instr-profile=lhapdf.profdata \
+                --skip-functions \
+                --format lcov > lcov.info
+
+    - name: Upload to codecov.io
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}
