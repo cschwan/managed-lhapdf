@@ -4,7 +4,6 @@
 //! (Unofficial) Rust wrapper for the [LHAPDF](https://lhapdf.hepforge.org) C++ library.
 
 use cxx::{let_cxx_string, CxxVector, Exception, UniquePtr};
-use std::convert::TryFrom;
 use std::fmt::{self, Formatter};
 use std::result;
 use thiserror::Error;
