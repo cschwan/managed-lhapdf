@@ -31,7 +31,7 @@ fn main() {
 fn main() {
     cxx_build::bridge("src/lib.rs")
         .define("FAKE_WRAPPERS", "1")
-        .compile("lhapdf-rust-cxx-bridge");
+        .compile("managed-lhapdf-rust-cxx-bridge");
 
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=include/fake-lhapdf.hpp");

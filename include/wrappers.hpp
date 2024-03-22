@@ -7,7 +7,7 @@
 #include <LHAPDF/LHAPDF.h>
 #endif
 
-#include <lhapdf/src/lib.rs.h>
+#include <managed-lhapdf/src/lib.rs.h>
 #include <rust/cxx.h>
 
 #include <cstdint>

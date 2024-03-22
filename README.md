@@ -6,7 +6,8 @@
 # Description
 
 (Unofficial) Rust bindings for the [LHAPDF](https://lhapdf.hepforge.org) C++
-library
+library, with automatic management functions. This is the successor of
+<https://github.com/cschwan/lhapdf>.
 
 # (Un)safeness
 

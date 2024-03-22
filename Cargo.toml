@@ -1,10 +1,10 @@
 [package]
-name = "lhapdf"
+name = "managed-lhapdf"
 version = "0.2.4"
 authors = ["Christopher Schwan <handgranaten-herbert@posteo.de>"]
 edition = "2018"
 license = "GPL-3.0-or-later"
-repository = "https://github.com/cschwan/lhapdf"
+repository = "https://github.com/cschwan/managed-lhapdf"
 readme = "README.md"
 keywords = ["high-energy-physics", "physics"]
 categories = ["science"]
