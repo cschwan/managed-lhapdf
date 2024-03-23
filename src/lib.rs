@@ -3,6 +3,8 @@
 
 //! (Unofficial) Rust wrapper for the [LHAPDF](https://lhapdf.hepforge.org) C++ library.
 
+mod manager;
+
 use cxx::{let_cxx_string, CxxVector, Exception, UniquePtr};
 use std::fmt::{self, Formatter};
 use std::result;
@@ -114,17 +116,7 @@ pub fn available_pdf_sets() -> Vec<String> {
 /// Convert an LHAID to an LHAPDF set name and member ID.
 #[must_use]
 pub fn lookup_pdf(lhaid: i32) -> Option<(String, i32)> {
-    let_cxx_string!(cxx_setname = "");
-    ffi::lookup_pdf_setname(lhaid, cxx_setname.as_mut());
-
-    let setname = cxx_setname.to_string_lossy();
-    let memberid = ffi::lookup_pdf_memberid(lhaid);
-
-    if (setname == "") && (memberid == -1) {
-        None
-    } else {
-        Some((setname.to_string(), memberid))
-    }
+    manager::pdf_name_and_member_via_lhaid(lhaid)
 }
 
 /// Convenient way to set the verbosity level.
@@ -158,9 +150,7 @@ impl Pdf {
     ///
     /// TODO
     pub fn with_lhaid(lhaid: i32) -> Result<Self> {
-        ffi::pdf_with_lhaid(lhaid)
-            .map(|ptr| Self { ptr })
-            .map_err(|exc| LhapdfError { exc })
+        manager::pdf_with_lhaid(lhaid).map(|ptr| Self { ptr })
     }
 
     /// Constructor. Create a new PDF with the given PDF `setname` and `member` ID.
@@ -169,10 +159,7 @@ impl Pdf {
     ///
     /// TODO
     pub fn with_setname_and_member(setname: &str, member: i32) -> Result<Self> {
-        let_cxx_string!(cxx_setname = setname.to_string());
-        ffi::pdf_with_setname_and_member(&cxx_setname, member)
-            .map(|ptr| Self { ptr })
-            .map_err(|exc| LhapdfError { exc })
+        manager::pdf_with_setname_and_member(setname, member).map(|ptr| Self { ptr })
     }
 
     /// Create a new PDF with the given PDF set name and member ID as a single string.
@@ -187,10 +174,7 @@ impl Pdf {
     ///
     /// TODO
     pub fn with_setname_and_nmem(setname_nmem: &str) -> Result<Self> {
-        let_cxx_string!(cxx_setname = setname_nmem.to_string());
-        ffi::pdf_with_setname_and_nmem(&cxx_setname)
-            .map(|ptr| Self { ptr })
-            .map_err(|exc| LhapdfError { exc })
+        manager::pdf_with_setname_and_nmem(setname_nmem).map(|ptr| Self { ptr })
     }
 
     /// Get the PDF `x * f(x)` value at `x` and `q2` for the given PDG ID.
@@ -216,9 +200,7 @@ impl Pdf {
     /// Get the info class that actually stores and handles the metadata.
     #[must_use]
     pub fn set(&self) -> PdfSet {
-        PdfSet {
-            ptr: ffi::pdfset_from_pdf(&self.ptr),
-        }
+        PdfSet::from(self)
     }
 
     /// Minimum valid x value for this PDF.
@@ -282,6 +264,14 @@ impl fmt::Debug for PdfSet {
     }
 }
 
+impl From<&Pdf> for PdfSet {
+    fn from(pdf: &Pdf) -> Self {
+        Self {
+            ptr: manager::pdfset_from_pdf(&pdf.ptr),
+        }
+    }
+}
+
 impl PdfSet {
     /// Constructor from a set name.
     ///
@@ -289,11 +279,7 @@ impl PdfSet {
     ///
     /// If the PDF set with the specified name was not found an error is returned.
     pub fn new(setname: &str) -> Result<Self> {
-        let_cxx_string!(cxx_setname = setname);
-
-        ffi::pdfset_new(&cxx_setname)
-            .map(|ptr| Self { ptr })
-            .map_err(|exc| LhapdfError { exc })
+        manager::pdfset_new(setname).map(|ptr| Self { ptr })
     }
 
     /// Retrieve a metadata string by key name.
@@ -322,7 +308,7 @@ impl PdfSet {
     pub fn mk_pdfs(&self) -> Vec<Pdf> {
         (0..i32::try_from(self.ptr.size()).unwrap_or_else(|_| unreachable!()))
             .map(|member| Pdf {
-                ptr: ffi::pdf_with_set_and_member(&self.ptr, member)
+                ptr: manager::pdf_with_set_and_member(&self.ptr, member)
                     .unwrap_or_else(|_| unreachable!()),
             })
             .collect()
