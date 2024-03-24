@@ -71,10 +71,10 @@ mod ffi {
     unsafe extern "C++" {
         include!("managed-lhapdf/include/wrappers.hpp");
 
+        fn pdf_setname(pdf: &PDF, setname: Pin<&mut CxxString>);
         fn pdf_with_setname_and_member(setname: &CxxString, member: i32) -> Result<UniquePtr<PDF>>;
         fn pdfset_new(setname: &CxxString) -> Result<UniquePtr<PDFSet>>;
         fn pdfset_setname(pdf: &PDFSet, setname: Pin<&mut CxxString>);
-        fn pdfset_from_pdf(pdf: &PDF) -> UniquePtr<PDFSet>;
 
         fn lookup_pdf_setname(lhaid: i32, setname: Pin<&mut CxxString>);
         fn lookup_pdf_memberid(lhaid: i32) -> i32;
@@ -203,7 +203,13 @@ impl Pdf {
     /// Get the info class that actually stores and handles the metadata.
     #[must_use]
     pub fn set(&self) -> PdfSet {
-        PdfSet::from(self)
+        let_cxx_string!(setname = "");
+        ffi::pdf_setname(&self.ptr, setname.as_mut());
+        // UNWRAP: if `setname` contains any non-UTF8 bytes there's an error somewhere else
+        let setname = setname.to_str().unwrap_or_else(|_| unreachable!());
+
+        // UNWRAP: if a `PDF` doesn't have a `PDFSet` there's a bug somewhere
+        PdfSet::new(setname).unwrap_or_else(|_| unreachable!())
     }
 
     /// Minimum valid x value for this PDF.
@@ -261,17 +267,10 @@ pub struct PdfSet {
 
 impl fmt::Debug for PdfSet {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        // TODO: a PDF set may not have an LHAPDF ID
         f.debug_struct("PdfSet")
             .field("lhaid", &self.ptr.lhapdfID())
             .finish()
-    }
-}
-
-impl From<&Pdf> for PdfSet {
-    fn from(pdf: &Pdf) -> Self {
-        Self {
-            ptr: manager::pdfset_from_pdf(&pdf.ptr),
-        }
     }
 }
 

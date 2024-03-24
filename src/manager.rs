@@ -22,10 +22,6 @@ pub fn pdf_with_setname_and_member(setname: &str, member: i32) -> Result<UniqueP
         .map_err(|exc| Error::LhapdfException(exc))
 }
 
-pub fn pdfset_from_pdf(pdf: &UniquePtr<PDF>) -> UniquePtr<PDFSet> {
-    ffi::pdfset_from_pdf(pdf)
-}
-
 pub fn pdfset_new(setname: &str) -> Result<UniquePtr<PDFSet>> {
     let_cxx_string!(cxx_setname = setname);
 

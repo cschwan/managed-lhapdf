@@ -17,6 +17,10 @@
 
 #ifdef FAKE_WRAPPERS
 
+inline void pdf_setname(LHAPDF::PDF const&, std::string& name) {
+    name = "";
+}
+
 inline std::unique_ptr<LHAPDF::PDF> pdf_with_setname_and_member(std::string const&, std::int32_t) {
     return std::unique_ptr<LHAPDF::PDF>();
 }
@@ -27,10 +31,6 @@ inline std::unique_ptr<LHAPDF::PDFSet> pdfset_new(std::string const&) {
 
 inline void pdfset_setname(LHAPDF::PDFSet const&, std::string& name) {
     name = "";
-}
-
-inline std::unique_ptr<LHAPDF::PDFSet> pdfset_from_pdf(LHAPDF::PDF const&) {
-    return std::unique_ptr<LHAPDF::PDFSet>();
 }
 
 inline void lookup_pdf_setname(std::int32_t, std::string&) {}
@@ -53,6 +53,10 @@ inline PdfUncertainty pdf_uncertainty(
 
 #else
 
+inline void pdf_setname(LHAPDF::PDF const& pdf, std::string& name) {
+    name = pdf.set().name();
+}
+
 inline std::unique_ptr<LHAPDF::PDF> pdf_with_setname_and_member(
     std::string const& setname,
     std::int32_t member
@@ -66,10 +70,6 @@ inline std::unique_ptr<LHAPDF::PDFSet> pdfset_new(std::string const& setname) {
 
 inline void pdfset_setname(LHAPDF::PDFSet const& pdfset, std::string& name) {
     name = pdfset.name();
-}
-
-inline std::unique_ptr<LHAPDF::PDFSet> pdfset_from_pdf(LHAPDF::PDF const& pdf) {
-    return std::unique_ptr<LHAPDF::PDFSet>(new LHAPDF::PDFSet(pdf.set()));
 }
 
 inline void lookup_pdf_setname(std::int32_t lhaid, std::string& setname) {
