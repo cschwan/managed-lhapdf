@@ -111,6 +111,8 @@ pub fn lookup_pdf(lhaid: i32) -> Option<(String, i32)> {
 
 /// Convenient way to set the verbosity level.
 pub fn set_verbosity(verbosity: i32) {
+    // TODO: this modifies a `static` variable in C++, beware of threads calling this function at
+    // the same time
     ffi::setVerbosity(verbosity);
 }
 
@@ -127,6 +129,7 @@ pub struct Pdf {
 
 impl fmt::Debug for Pdf {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        // TODO: not all PDFs have an LHAID
         f.debug_struct("Pdf")
             .field("lhaid", &self.ptr.lhapdfID())
             .finish()
