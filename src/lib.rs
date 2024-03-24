@@ -318,18 +318,27 @@ impl PdfSet {
     /// Make all the PDFs in this set.
     #[must_use]
     pub fn mk_pdfs(&self) -> Vec<Pdf> {
-        (0..i32::try_from(self.ptr.size()).unwrap_or_else(|_| unreachable!()))
-            .map(|member| Pdf {
-                ptr: {
-                    let_cxx_string!(setname = "");
-                    ffi::pdfset_setname(&self.ptr, setname.as_mut());
-                    let setname = setname.to_str().unwrap();
+        let setname = self.name();
 
-                    manager::pdf_with_setname_and_member(setname, member)
-                        .unwrap_or_else(|_| unreachable!())
-                },
+        // UNWRAP: if we can't convert a `usize` to an `i32`, then we probably got too many members
+        // indicating a bug somewher
+        (0..i32::try_from(self.ptr.size()).unwrap_or_else(|_| unreachable!()))
+            .map(|member| {
+                // UNWRAP: if we can crate a PDF set but not its PDFs, there's a bug somewhere
+                Pdf::with_setname_and_member(&setname, member).unwrap_or_else(|_| unreachable!())
             })
             .collect()
+    }
+
+    /// PDF set name.
+    #[must_use]
+    pub fn name(&self) -> String {
+        let_cxx_string!(setname = "");
+        ffi::pdfset_setname(&self.ptr, setname.as_mut());
+        // UNWRAP: if `setname` contains any non-UTF8 bytes there's an error somewhere else
+        let setname = setname.to_str().unwrap_or_else(|_| unreachable!());
+
+        setname.to_owned()
     }
 
     /// Calculate central value and error from vector values with appropriate formulae for this
@@ -486,6 +495,7 @@ mod test {
         assert_eq!(pdf_set.entry("idontexist"), None);
 
         assert_eq!(pdf_set.error_type(), "replicas");
+        assert_eq!(pdf_set.name(), "NNPDF31_nlo_as_0118_luxqed");
 
         assert_eq!(
             PdfSet::new("IDontExist").unwrap_err().to_string(),
