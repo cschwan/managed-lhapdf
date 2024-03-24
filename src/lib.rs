@@ -63,7 +63,7 @@ mod ffi {
         type PDFSet;
 
         fn has_key(self: &PDFSet, key: &CxxString) -> bool;
-        fn get_entry(self: &PDFSet, key: &CxxString) -> &'static CxxString;
+        fn get_entry<'a>(self: &PDFSet, key: &'a CxxString) -> &'a CxxString;
         fn size(self: &PDFSet) -> usize;
         fn lhapdfID(self: &PDFSet) -> i32;
     }
