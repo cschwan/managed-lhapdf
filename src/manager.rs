@@ -33,8 +33,13 @@ pub fn pdf_with_setname_and_member(setname: &str, member: i32) -> Result<UniqueP
 }
 
 pub fn pdf_with_setname_and_nmem(setname_nmem: &str) -> Result<UniquePtr<PDF>> {
-    let_cxx_string!(cxx_setname = setname_nmem.to_string());
-    ffi::pdf_with_setname_and_nmem(&cxx_setname).map_err(|exc| Error::LhapdfException(exc))
+    let (setname, member) = setname_nmem
+        .split_once('/')
+        .map_or((setname_nmem, 0), |(setname, nmem)| {
+            (setname, nmem.parse().unwrap())
+        });
+
+    pdf_with_setname_and_member(setname, member)
 }
 
 pub fn pdfset_from_pdf(pdf: &UniquePtr<PDF>) -> UniquePtr<PDFSet> {

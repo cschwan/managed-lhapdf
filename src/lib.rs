@@ -72,7 +72,6 @@ mod ffi {
         include!("managed-lhapdf/include/wrappers.hpp");
 
         fn pdf_with_setname_and_member(setname: &CxxString, member: i32) -> Result<UniquePtr<PDF>>;
-        fn pdf_with_setname_and_nmem(setname: &CxxString) -> Result<UniquePtr<PDF>>;
         fn pdf_with_set_and_member(set: &PDFSet, member: i32) -> Result<UniquePtr<PDF>>;
         fn pdf_with_lhaid(lhaid: i32) -> Result<UniquePtr<PDF>>;
         fn pdfset_new(setname: &CxxString) -> Result<UniquePtr<PDFSet>>;
