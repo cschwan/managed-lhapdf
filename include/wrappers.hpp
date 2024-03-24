@@ -1,6 +1,12 @@
 #ifndef WRAPPERS_HPP
 #define WRAPPERS_HPP
 
+// This file defines a few wrappers on top of the real/fake LHAPDF library, which are needed due to
+// the limitation of the `cxx` crate: we can't use C++ functions that return `std::string` or
+// `std::pair` and constructors need to be wrapped with a function returning the constructed object
+// in a `std::unique_ptr`. Finally, LHAPDF decided to change to layout of the type `PDFUncertainty`,
+// so to be safe against those changes we define our own type.
+
 #ifdef FAKE_WRAPPERS
 #include "fake-lhapdf.hpp"
 #else
@@ -14,44 +20,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-
-#ifdef FAKE_WRAPPERS
-
-inline void pdf_setname(LHAPDF::PDF const&, std::string& name) {
-    name = "";
-}
-
-inline std::unique_ptr<LHAPDF::PDF> pdf_with_setname_and_member(std::string const&, std::int32_t) {
-    return std::unique_ptr<LHAPDF::PDF>();
-}
-
-inline std::unique_ptr<LHAPDF::PDFSet> pdfset_new(std::string const&) {
-    return std::unique_ptr<LHAPDF::PDFSet>();
-}
-
-inline void pdfset_setname(LHAPDF::PDFSet const&, std::string& name) {
-    name = "";
-}
-
-inline void lookup_pdf_setname(std::int32_t, std::string&) {}
-
-inline std::int32_t lookup_pdf_memberid(std::int32_t) {
-    return 0;
-}
-
-inline void get_pdfset_error_type(LHAPDF::PDFSet const&, std::string&) {}
-
-inline PdfUncertainty pdf_uncertainty(
-    LHAPDF::PDFSet const&,
-    rust::Slice<double const>,
-    double,
-    bool
-) {
-    PdfUncertainty result;
-    return result;
-}
-
-#else
 
 inline void pdf_setname(LHAPDF::PDF const& pdf, std::string& name) {
     name = pdf.set().name();
@@ -107,7 +75,5 @@ inline PdfUncertainty pdf_uncertainty(
 
     return result;
 }
-
-#endif
 
 #endif
