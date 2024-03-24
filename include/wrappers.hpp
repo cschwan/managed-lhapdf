@@ -21,10 +21,6 @@ inline std::unique_ptr<LHAPDF::PDF> pdf_with_setname_and_member(std::string cons
     return std::unique_ptr<LHAPDF::PDF>();
 }
 
-inline std::unique_ptr<LHAPDF::PDF> pdf_with_lhaid(std::int32_t) {
-    return std::unique_ptr<LHAPDF::PDF>();
-}
-
 inline std::unique_ptr<LHAPDF::PDFSet> pdfset_new(std::string const&) {
     return std::unique_ptr<LHAPDF::PDFSet>();
 }
@@ -62,10 +58,6 @@ inline std::unique_ptr<LHAPDF::PDF> pdf_with_setname_and_member(
     std::int32_t member
 ) {
     return std::unique_ptr<LHAPDF::PDF>(LHAPDF::mkPDF(setname, member));
-}
-
-inline std::unique_ptr<LHAPDF::PDF> pdf_with_lhaid(std::int32_t lhaid) {
-    return std::unique_ptr<LHAPDF::PDF>(LHAPDF::mkPDF(lhaid));
 }
 
 inline std::unique_ptr<LHAPDF::PDFSet> pdfset_new(std::string const& setname) {

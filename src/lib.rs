@@ -72,7 +72,6 @@ mod ffi {
         include!("managed-lhapdf/include/wrappers.hpp");
 
         fn pdf_with_setname_and_member(setname: &CxxString, member: i32) -> Result<UniquePtr<PDF>>;
-        fn pdf_with_lhaid(lhaid: i32) -> Result<UniquePtr<PDF>>;
         fn pdfset_new(setname: &CxxString) -> Result<UniquePtr<PDFSet>>;
         fn pdfset_setname(pdf: &PDFSet, setname: Pin<&mut CxxString>);
         fn pdfset_from_pdf(pdf: &PDF) -> UniquePtr<PDFSet>;
@@ -142,7 +141,13 @@ impl Pdf {
     ///
     /// TODO
     pub fn with_lhaid(lhaid: i32) -> Result<Self> {
-        manager::pdf_with_lhaid(lhaid).map(|ptr| Self { ptr })
+        let Some((setname, member)) = lookup_pdf(lhaid) else {
+            return Err(Error::General(format!(
+                "did not find PDF with LHAID = {lhaid}"
+            )));
+        };
+
+        Self::with_setname_and_member(&setname, member)
     }
 
     /// Constructor. Create a new PDF with the given PDF `setname` and `member` ID.
@@ -417,7 +422,7 @@ mod test {
 
         assert_eq!(
             Pdf::with_lhaid(0).unwrap_err().to_string(),
-            "Info file not found for PDF set ''"
+            "did not find PDF with LHAID = 0"
         );
 
         assert_eq!(pdf_0.x_min(), 1e-9);

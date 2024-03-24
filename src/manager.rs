@@ -16,10 +16,6 @@ pub fn pdf_name_and_member_via_lhaid(lhaid: i32) -> Option<(String, i32)> {
     }
 }
 
-pub fn pdf_with_lhaid(lhaid: i32) -> Result<UniquePtr<PDF>> {
-    ffi::pdf_with_lhaid(lhaid).map_err(|exc| Error::LhapdfException(exc))
-}
-
 pub fn pdf_with_setname_and_member(setname: &str, member: i32) -> Result<UniquePtr<PDF>> {
     let_cxx_string!(cxx_setname = setname.to_string());
     ffi::pdf_with_setname_and_member(&cxx_setname, member)
