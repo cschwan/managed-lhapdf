@@ -26,16 +26,6 @@ pub fn pdf_with_setname_and_member(setname: &str, member: i32) -> Result<UniqueP
         .map_err(|exc| Error::LhapdfException(exc))
 }
 
-pub fn pdf_with_setname_and_nmem(setname_nmem: &str) -> Result<UniquePtr<PDF>> {
-    let (setname, member) = setname_nmem
-        .split_once('/')
-        .map_or((setname_nmem, 0), |(setname, nmem)| {
-            (setname, nmem.parse().unwrap())
-        });
-
-    pdf_with_setname_and_member(setname, member)
-}
-
 pub fn pdfset_from_pdf(pdf: &UniquePtr<PDF>) -> UniquePtr<PDFSet> {
     ffi::pdfset_from_pdf(pdf)
 }

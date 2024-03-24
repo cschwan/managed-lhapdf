@@ -166,7 +166,13 @@ impl Pdf {
     ///
     /// TODO
     pub fn with_setname_and_nmem(setname_nmem: &str) -> Result<Self> {
-        manager::pdf_with_setname_and_nmem(setname_nmem).map(|ptr| Self { ptr })
+        let (setname, member) = setname_nmem
+            .split_once('/')
+            .map_or((setname_nmem, 0), |(setname, nmem)| {
+                (setname, nmem.parse().unwrap())
+            });
+
+        Self::with_setname_and_member(setname, member)
     }
 
     /// Get the PDF `x * f(x)` value at `x` and `q2` for the given PDG ID.
