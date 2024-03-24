@@ -171,11 +171,21 @@ impl Pdf {
     ///
     /// TODO
     pub fn with_setname_and_nmem(setname_nmem: &str) -> Result<Self> {
-        let (setname, member) = setname_nmem
-            .split_once('/')
-            .map_or((setname_nmem, 0), |(setname, nmem)| {
-                (setname, nmem.parse().unwrap())
-            });
+        let (setname, member) =
+            setname_nmem
+                .split_once('/')
+                .map_or(Ok((setname_nmem, 0)), |(setname, nmem)| {
+                    Ok((
+                        setname,
+                        nmem.parse().map_err(|err| {
+                            {
+                                Error::General(format!(
+                                    "problem while parsing member index = {nmem}: '{err}'"
+                                ))
+                            }
+                        })?,
+                    ))
+                })?;
 
         Self::with_setname_and_member(setname, member)
     }
@@ -454,6 +464,13 @@ mod test {
                 .unwrap_err()
                 .to_string(),
             "Info file not found for PDF set 'foobar'"
+        );
+
+        assert_eq!(
+            Pdf::with_setname_and_nmem("NNPDF31_nlo_as_0118_luxqed/x")
+                .unwrap_err()
+                .to_string(),
+            "problem while parsing member index = x: 'invalid digit found in string'"
         );
 
         Ok(())
