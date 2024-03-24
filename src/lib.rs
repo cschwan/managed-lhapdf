@@ -3,12 +3,14 @@
 
 //! (Unofficial) Rust wrapper for the [LHAPDF](https://lhapdf.hepforge.org) C++ library.
 
+mod error;
 mod manager;
 
-use cxx::{let_cxx_string, CxxVector, Exception, UniquePtr};
+use cxx::{let_cxx_string, CxxVector, UniquePtr};
 use std::fmt::{self, Formatter};
-use std::result;
-use thiserror::Error;
+
+pub use error::{Error, Result};
+pub use ffi::PdfUncertainty;
 
 #[cxx::bridge]
 mod ffi {
@@ -89,20 +91,8 @@ mod ffi {
     }
 }
 
-/// Error struct that wraps all exceptions thrown by the LHAPDF library.
-#[derive(Debug, Error)]
-#[error(transparent)]
-pub struct LhapdfError {
-    exc: Exception,
-}
-
 /// CL percentage for a Gaussian 1-sigma.
 pub const CL_1_SIGMA: f64 = 68.268_949_213_708_58;
-
-/// Type definition for results with an [`LhapdfError`].
-pub type Result<T> = result::Result<T, LhapdfError>;
-
-pub use ffi::PdfUncertainty;
 
 /// Get the names of all available PDF sets in the search path.
 #[must_use]
@@ -345,7 +335,8 @@ impl PdfSet {
         cl: f64,
         alternative: bool,
     ) -> Result<PdfUncertainty> {
-        ffi::pdf_uncertainty(&self.ptr, values, cl, alternative).map_err(|exc| LhapdfError { exc })
+        ffi::pdf_uncertainty(&self.ptr, values, cl, alternative)
+            .map_err(|exc| Error::LhapdfException(exc))
     }
 }
 
