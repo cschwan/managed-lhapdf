@@ -20,12 +20,6 @@ pub fn pdf_with_lhaid(lhaid: i32) -> Result<UniquePtr<PDF>> {
     ffi::pdf_with_lhaid(lhaid).map_err(|exc| Error::LhapdfException(exc))
 }
 
-// TODO: remove this function and instead use `pdf_with_setname_and_member`; this requires to
-// implement `PdfSet::name`
-pub fn pdf_with_set_and_member(set: &UniquePtr<PDFSet>, member: i32) -> Result<UniquePtr<PDF>> {
-    ffi::pdf_with_set_and_member(set, member).map_err(|exc| Error::LhapdfException(exc))
-}
-
 pub fn pdf_with_setname_and_member(setname: &str, member: i32) -> Result<UniquePtr<PDF>> {
     let_cxx_string!(cxx_setname = setname.to_string());
     ffi::pdf_with_setname_and_member(&cxx_setname, member)

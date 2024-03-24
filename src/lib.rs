@@ -72,9 +72,9 @@ mod ffi {
         include!("managed-lhapdf/include/wrappers.hpp");
 
         fn pdf_with_setname_and_member(setname: &CxxString, member: i32) -> Result<UniquePtr<PDF>>;
-        fn pdf_with_set_and_member(set: &PDFSet, member: i32) -> Result<UniquePtr<PDF>>;
         fn pdf_with_lhaid(lhaid: i32) -> Result<UniquePtr<PDF>>;
         fn pdfset_new(setname: &CxxString) -> Result<UniquePtr<PDFSet>>;
+        fn pdfset_setname(pdf: &PDFSet, setname: Pin<&mut CxxString>);
         fn pdfset_from_pdf(pdf: &PDF) -> UniquePtr<PDFSet>;
 
         fn lookup_pdf_setname(lhaid: i32, setname: Pin<&mut CxxString>);
@@ -300,8 +300,14 @@ impl PdfSet {
     pub fn mk_pdfs(&self) -> Vec<Pdf> {
         (0..i32::try_from(self.ptr.size()).unwrap_or_else(|_| unreachable!()))
             .map(|member| Pdf {
-                ptr: manager::pdf_with_set_and_member(&self.ptr, member)
-                    .unwrap_or_else(|_| unreachable!()),
+                ptr: {
+                    let_cxx_string!(setname = "");
+                    ffi::pdfset_setname(&self.ptr, setname.as_mut());
+                    let setname = setname.to_str().unwrap();
+
+                    manager::pdf_with_setname_and_member(setname, member)
+                        .unwrap_or_else(|_| unreachable!())
+                },
             })
             .collect()
     }
