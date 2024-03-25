@@ -34,6 +34,7 @@ jobs:
               xargs $(rustc --print target-libdir)/../bin/llvm-cov export \
                   --ignore-filename-regex='index.crates.io' \
                   --ignore-filename-regex='rustc' \
+                  --ignore-filename-regex='/target/' \
                   --instr-profile=lhapdf.profdata \
                   --skip-functions \
                   --format lcov > lcov.info
