@@ -17,9 +17,14 @@
 #include <rust/cxx.h>
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
+
+inline void empty_lhaindex() {
+    LHAPDF::getPDFIndex() = std::map<int, std::string>();
+}
 
 inline void pdf_setname(LHAPDF::PDF const& pdf, std::string& name) {
     name = pdf.set().name();

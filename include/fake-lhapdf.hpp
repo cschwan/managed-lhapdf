@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -119,6 +120,11 @@ struct PDF {
 private:
     std::vector<int> flavors_;
 };
+
+std::map<int, std::string>& getPDFIndex() {
+    static std::map<int, std::string> pdf_index;
+    return pdf_index;
+}
 
 PDF* mkPDF(std::string const&, int) {
     return new PDF();

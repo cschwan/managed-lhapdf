@@ -76,6 +76,7 @@ mod ffi {
         fn pdfset_new(setname: &CxxString) -> Result<UniquePtr<PDFSet>>;
         fn pdfset_setname(pdf: &PDFSet, setname: Pin<&mut CxxString>);
 
+        fn empty_lhaindex();
         fn lookup_pdf_setname(lhaid: i32, setname: Pin<&mut CxxString>);
         fn lookup_pdf_memberid(lhaid: i32) -> i32;
         fn get_pdfset_error_type(set: &PDFSet, setname: Pin<&mut CxxString>);
