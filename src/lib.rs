@@ -365,15 +365,17 @@ impl PdfSet {
     /// For a combined set, a breakdown of the separate PDF and parameter variation uncertainties
     /// is available. The parameter variation uncertainties are computed from the last `2*n`
     /// members of the set, with `n` the number of parameters.
-    #[must_use]
+    ///
+    /// # Errors
+    ///
+    /// TODO
     pub fn uncertainty(
         &self,
         values: &[f64],
         cl: f64,
         alternative: bool,
     ) -> Result<PdfUncertainty> {
-        ffi::pdf_uncertainty(&self.ptr, values, cl, alternative)
-            .map_err(|exc| Error::LhapdfException(exc))
+        ffi::pdf_uncertainty(&self.ptr, values, cl, alternative).map_err(Error::LhapdfException)
     }
 }
 
