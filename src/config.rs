@@ -35,8 +35,9 @@ impl Config {
                 .create_new(true)
                 .open(&config_path)
             {
+                // the file didn't exist before
                 Ok(mut file) => {
-                    // the file didn't exist, use the default configuration ...
+                    // use a default configuration
                     let mut config = Config {
                         lhapdf_data_path: vec![dirs::data_dir()
                             .ok_or_else(|| Error::General(format!("no data directory found")))?
@@ -57,7 +58,6 @@ impl Config {
                             os_str.to_str().unwrap().split(':').map(ToOwned::to_owned).collect();
                     }
 
-                    // and write it to the file we've just created
                     file.write_all(
                         &toml::to_string_pretty(&config)
                             .map_err(|err| Error::General(format!("{err}")))?
