@@ -16,7 +16,7 @@ anyhow = "1.0.81"
 cxx = "1.0.107"
 dirs = "5.0.1"
 flate2 = "1.0.28"
-reqwest = { features = ["blocking", "rustls-tls"], version = "0.12.2" }
+reqwest = { default-features = false, features = ["blocking", "rustls-tls"], version = "0.12.2" }
 serde = { features = ["derive"], version = "1.0.195" }
 tar = "0.4.40"
 thiserror = "1.0"
