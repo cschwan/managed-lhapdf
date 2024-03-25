@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- added new method `PdfSet::name`
+- renamed `LhapdfError` to `Error`, which now is an enum of `LhapdfException`
+  and `General`, which denote exceptions coming from the C++ library and errors
+  from the Rust part, respectively
+- raised MSRV to 1.70.0
+
 ## [0.2.4] - 15/01/2024
 
 - added `Pdf::flavors` and `Pdf::set_flavors` methods
