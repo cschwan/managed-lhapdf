@@ -12,6 +12,7 @@ description = "(Unofficial) Rust bindings for the LHAPDF C++ library"
 rust-version = "1.70.0"
 
 [dependencies]
+anyhow = "1.0.81"
 cxx = "1.0.107"
 dirs = "5.0.1"
 serde = { features = ["derive"], version = "1.0.195" }

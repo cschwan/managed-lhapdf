@@ -24,7 +24,7 @@ impl Config {
 
             // create the configuration directory if it doesn't exist yet - in practice this only
             // happens in our CI
-            fs::create_dir_all(&config_path).map_err(|err| Error::General(format!("{err}")))?;
+            fs::create_dir_all(&config_path)?;
 
             let config_path = config_path.join("managed-lhapdf.toml");
 
@@ -58,24 +58,15 @@ impl Config {
                             os_str.to_str().unwrap().split(':').map(ToOwned::to_owned).collect();
                     }
 
-                    file.write_all(
-                        &toml::to_string_pretty(&config)
-                            .map_err(|err| Error::General(format!("{err}")))?
-                            .as_bytes(),
-                    )
-                    .map_err(|err| Error::General(format!("{err}")))?;
+                    file.write_all(&toml::to_string_pretty(&config)?.as_bytes())?;
 
                     config
                 }
                 Err(err) if err.kind() == ErrorKind::AlreadyExists => {
                     // the file already exists, simply read it
-                    toml::from_str(
-                        &fs::read_to_string(&config_path)
-                            .map_err(|err| Error::General(format!("{err}")))?,
-                    )
-                    .map_err(|err| Error::General(format!("{err}")))?
+                    toml::from_str(&fs::read_to_string(&config_path)?)?
                 }
-                Err(err) => return Err(Error::General(format!("{err}"))),
+                Err(err) => Err(err)?,
             };
 
             // we use the environment variable `LHAPDF_DATA_PATH` to let LHAPDF know where we've
