@@ -10,6 +10,7 @@ defaults:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: '-Cinstrument-coverage'
+  RUST_BACKTRACE: 1
 
 jobs:
   build:
@@ -34,12 +35,14 @@ jobs:
               xargs $(rustc --print target-libdir)/../bin/llvm-cov export \
                   --ignore-filename-regex='index.crates.io' \
                   --ignore-filename-regex='rustc' \
-                  --ignore-filename-regex='/target/' \
                   --instr-profile=lhapdf.profdata \
                   --skip-functions \
                   --format lcov > lcov.info
+          # print all files for which coverage has been generated
+          grep SF lcov.info | sort -u | sed 's/SF://'
 
       - name: Upload to codecov.io
+        # version 4 upgrades to Node 20, which breaks inside our container
         uses: codecov/codecov-action@v3
         with:
           token: ${{secrets.CODECOV_TOKEN}}
