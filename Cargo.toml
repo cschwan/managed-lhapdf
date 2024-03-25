@@ -13,7 +13,10 @@ rust-version = "1.70.0"
 
 [dependencies]
 cxx = "1.0.107"
+dirs = "5.0.1"
+serde = { features = ["derive"], version = "1.0.195" }
 thiserror = "1.0"
+toml = { features = ["display", "parse"], version = "0.8.12" }
 
 [build-dependencies]
 cxx-build = "1.0.107"

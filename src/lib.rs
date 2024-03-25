@@ -3,6 +3,7 @@
 
 //! (Unofficial) Rust wrapper for the [LHAPDF](https://lhapdf.hepforge.org) C++ library.
 
+mod config;
 mod error;
 mod manager;
 
