@@ -1,9 +1,26 @@
 use super::{Error, Result};
+use reqwest::blocking;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs::{self, File};
 use std::io::{ErrorKind, Write};
+use std::path::PathBuf;
 use std::sync::OnceLock;
+
+const LHAPDF_CONFIG: &str = "Verbosity: 1
+Interpolator: logcubic
+Extrapolator: continuation
+ForcePositive: 0
+AlphaS_Type: analytic
+MZ: 91.1876
+MUp: 0.002
+MDown: 0.005
+MStrange: 0.10
+MCharm: 1.29
+MBottom: 4.19
+MTop: 172.9
+Pythia6LambdaV5Compat: true
+";
 
 /// Configuration for this library.
 #[derive(Debug, Deserialize, Serialize)]
@@ -73,6 +90,35 @@ impl Config {
                 }
                 Err(err) => Err(err)?,
             };
+
+            // create download directory for `lhapdf.conf`
+            fs::create_dir_all(config.lhapdf_data_path_write())?;
+
+            // MSRV 1.77.0: use `File::create_new` instead
+            if let Ok(mut file) = File::options()
+                .read(true)
+                .write(true)
+                .create_new(true)
+                .open(PathBuf::from(config.lhapdf_data_path_write()).join("lhapdf.conf"))
+            {
+                // if `lhapdf.conf` doesn't exist, create it
+                file.write_all(LHAPDF_CONFIG.as_bytes())?;
+            }
+
+            let pdfsets_index =
+                PathBuf::from(config.lhapdf_data_path_write()).join("pdfsets.index");
+
+            // MSRV 1.77.0: use `File::create_new` instead
+            if let Ok(mut file) = File::options()
+                .read(true)
+                .write(true)
+                .create_new(true)
+                .open(pdfsets_index)
+            {
+                // if `pdfsets.index` doesn't exist, download it
+                let content = blocking::get(config.pdfsets_index_url())?.text()?;
+                file.write_all(content.as_bytes())?;
+            }
 
             // we use the environment variable `LHAPDF_DATA_PATH` to let LHAPDF know where we've
             // stored our PDFs

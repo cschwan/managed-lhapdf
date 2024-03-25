@@ -9,7 +9,7 @@ use cxx::{let_cxx_string, UniquePtr};
 use flate2::read::GzDecoder;
 use reqwest::blocking;
 use reqwest::StatusCode;
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 use tar::Archive;
@@ -23,9 +23,6 @@ fn download_set(name: &str, config: &Config) -> Result<()> {
         }
 
         let content = response.bytes()?;
-
-        // download directory may not exist
-        fs::create_dir_all(config.lhapdf_data_path_write())?;
 
         // TODO: what if multiple threads/processes try to write to the same file?
         Archive::new(GzDecoder::new(&content[..])).unpack(config.lhapdf_data_path_write())?;
@@ -45,16 +42,10 @@ fn update_pdfsets_index(config: &Config) -> Result<()> {
     // download `pdfsets.index`
     let content = blocking::get(config.pdfsets_index_url())?.text()?;
 
-    // download directory may not exist
-    fs::create_dir_all(config.lhapdf_data_path_write())?;
-
     let pdfsets_index = PathBuf::from(config.lhapdf_data_path_write()).join("pdfsets.index");
 
     // TODO: what if multiple threads/processes try to write to the same file?
     File::create(pdfsets_index)?.write_all(content.as_bytes())?;
-
-    let _ = config.lhapdf_data_path_write();
-    let _ = config.pdfsets_index_url();
 
     Ok(())
 }
@@ -120,4 +111,20 @@ pub fn pdfset_new(setname: &str) -> Result<UniquePtr<PDFSet>> {
             Err(err)
         }
     })
+}
+
+pub fn set_verbosity(verbosity: i32) {
+    // this must be the first call before anything from LHAPDF
+    let _ = Config::get();
+
+    // TODO: this modifies a `static` variable in C++, beware of threads calling this function at
+    // the same time
+    ffi::setVerbosity(verbosity)
+}
+
+pub fn verbosity() -> i32 {
+    // this must be the first call before anything from LHAPDF
+    let _ = Config::get();
+
+    ffi::verbosity()
 }

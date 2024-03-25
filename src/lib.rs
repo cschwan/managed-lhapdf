@@ -101,15 +101,13 @@ pub fn lookup_pdf(lhaid: i32) -> Option<(String, i32)> {
 
 /// Convenient way to set the verbosity level.
 pub fn set_verbosity(verbosity: i32) {
-    // TODO: this modifies a `static` variable in C++, beware of threads calling this function at
-    // the same time
-    ffi::setVerbosity(verbosity);
+    manager::set_verbosity(verbosity);
 }
 
 /// Convenient way to get the current verbosity level.
 #[must_use]
 pub fn verbosity() -> i32 {
-    ffi::verbosity()
+    manager::verbosity()
 }
 
 /// Wrapper to an LHAPDF object of the type `LHAPDF::PDF`.
