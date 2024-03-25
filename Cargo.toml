@@ -12,14 +12,14 @@ description = "(Unofficial) Rust bindings for the LHAPDF C++ library"
 rust-version = "1.70.0"
 
 [dependencies]
-anyhow = "1.0.81"
-cxx = "1.0.107"
+anyhow = "1.0.79"
+cxx = "1.0.65"
 dirs = "5.0.1"
-flate2 = "1.0.28"
+flate2 = "1.0.22"
 reqwest = { default-features = false, features = ["blocking", "rustls-tls"], version = "0.12.2" }
-serde = { features = ["derive"], version = "1.0.195" }
-tar = "0.4.40"
-thiserror = "1.0"
+serde = { features = ["derive"], version = "1.0.130" }
+tar = "0.4.38"
+thiserror = "1.0.30"
 toml = { features = ["display", "parse"], version = "0.8.12" }
 
 [build-dependencies]
