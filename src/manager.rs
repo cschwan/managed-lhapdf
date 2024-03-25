@@ -6,13 +6,33 @@ use super::config::Config;
 use super::ffi::{self, PDFSet, PDF};
 use super::{Error, Result};
 use cxx::{let_cxx_string, UniquePtr};
+use flate2::read::GzDecoder;
+use reqwest::blocking;
+use reqwest::StatusCode;
+use std::fs::{self, File};
+use std::io::Write;
+use std::path::PathBuf;
+use tar::Archive;
 
-fn download_set(_name: &str, config: &Config) -> Result<()> {
-    // TODO: try to find and download the pdf set from one of the repositories into
-    // `lhapdf_data_path`
+fn download_set(name: &str, config: &Config) -> Result<()> {
+    for url in config.pdfset_urls() {
+        let response = blocking::get(format!("{url}/{name}.tar.gz"))?;
 
-    let _ = config.lhapdf_data_path_write();
-    let _ = config.pdfset_urls();
+        if response.status() == StatusCode::NOT_FOUND {
+            continue;
+        }
+
+        let content = response.bytes()?;
+
+        // download directory may not exist
+        fs::create_dir_all(config.lhapdf_data_path_write())?;
+
+        // TODO: what if multiple threads/processes try to write to the same file?
+        Archive::new(GzDecoder::new(&content[..])).unpack(config.lhapdf_data_path_write())?;
+
+        // we found a PDF set, now it's LHAPDF's turn
+        break;
+    }
 
     Ok(())
 }
@@ -22,7 +42,16 @@ fn update_pdfsets_index(config: &Config) -> Result<()> {
     // re-initialization of this variable
     ffi::empty_lhaindex();
 
-    // TODO: download updated `pdfsets.index`
+    // download `pdfsets.index`
+    let content = blocking::get(config.pdfsets_index_url())?.text()?;
+
+    // download directory may not exist
+    fs::create_dir_all(config.lhapdf_data_path_write())?;
+
+    let pdfsets_index = PathBuf::from(config.lhapdf_data_path_write()).join("pdfsets.index");
+
+    // TODO: what if multiple threads/processes try to write to the same file?
+    File::create(pdfsets_index)?.write_all(content.as_bytes())?;
 
     let _ = config.lhapdf_data_path_write();
     let _ = config.pdfsets_index_url();

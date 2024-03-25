@@ -547,4 +547,9 @@ mod test {
 
         assert_eq!(pdf.flavors(), &[-5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 21]);
     }
+
+    #[test]
+    fn download_pdf_set() {
+        let _ = Pdf::with_setname_and_member("CT10", 0).unwrap();
+    }
 }
