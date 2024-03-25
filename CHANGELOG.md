@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- changed method `PdfSet::mk_pdfs` to return a `Result` of a `Vec<Pdf>`
 - added new method `PdfSet::name`
 - renamed `LhapdfError` to `Error`, which now is an enum of `LhapdfException`
   and `General`, which denote exceptions coming from the C++ library and errors

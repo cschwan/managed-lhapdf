@@ -309,17 +309,14 @@ impl PdfSet {
 
     /// Make all the PDFs in this set.
     #[must_use]
-    pub fn mk_pdfs(&self) -> Vec<Pdf> {
+    pub fn mk_pdfs(&self) -> Result<Vec<Pdf>> {
         let setname = self.name();
 
         // UNWRAP: if we can't convert a `usize` to an `i32`, then we probably got too many members
         // indicating a bug somewher
         (0..i32::try_from(self.ptr.size()).unwrap_or_else(|_| unreachable!()))
-            .map(|member| {
-                // UNWRAP: if we can crate a PDF set but not its PDFs, there's a bug somewhere
-                Pdf::with_setname_and_member(&setname, member).unwrap_or_else(|_| unreachable!())
-            })
-            .collect()
+            .map(|member| Pdf::with_setname_and_member(&setname, member))
+            .collect::<Result<Vec<_>>>()
     }
 
     /// PDF set name.
@@ -487,7 +484,7 @@ mod test {
             "Info file not found for PDF set 'IDontExist'"
         );
 
-        assert_eq!(pdf_set.mk_pdfs().len(), 101);
+        assert_eq!(pdf_set.mk_pdfs().unwrap().len(), 101);
 
         let uncertainty = pdf_set.uncertainty(&[0.0; 101], 68.268949213709, false)?;
 
