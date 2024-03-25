@@ -20,18 +20,18 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Self {
-        Error::Other(anyhow::Error::new(err))
+        Self::Other(anyhow::Error::new(err))
     }
 }
 
 impl From<toml::ser::Error> for Error {
     fn from(err: toml::ser::Error) -> Self {
-        Error::Other(anyhow::Error::new(err))
+        Self::Other(anyhow::Error::new(err))
     }
 }
 
 impl From<toml::de::Error> for Error {
     fn from(err: toml::de::Error) -> Self {
-        Error::Other(anyhow::Error::new(err))
+        Self::Other(anyhow::Error::new(err))
     }
 }

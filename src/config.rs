@@ -22,7 +22,7 @@ impl Config {
 
         let config = SINGLETON.get_or_init(|| {
             let config_path = dirs::config_dir()
-                .ok_or_else(|| Error::General(format!("no configuration directory found")))?;
+                .ok_or_else(|| Error::General("no configuration directory found".to_owned()))?;
 
             // create the configuration directory if it doesn't exist yet - in practice this only
             // happens in our CI
@@ -63,7 +63,7 @@ impl Config {
                             os_str.to_str().unwrap().split(':').map(ToOwned::to_owned).collect();
                     }
 
-                    file.write_all(&toml::to_string_pretty(&config)?.as_bytes())?;
+                    file.write_all(toml::to_string_pretty(&config)?.as_bytes())?;
 
                     config
                 }

@@ -42,7 +42,7 @@ pub fn pdf_name_and_member_via_lhaid(lhaid: i32) -> Option<(String, i32)> {
         let setname = cxx_setname.to_str().unwrap();
         let memberid = ffi::lookup_pdf_memberid(lhaid);
 
-        if (setname == "") && (memberid == -1) {
+        if setname.is_empty() && (memberid == -1) {
             None
         } else {
             Some((setname.to_owned(), memberid))
@@ -67,8 +67,8 @@ pub fn pdf_with_setname_and_member(setname: &str, member: i32) -> Result<UniqueP
 
     callable().or_else(|err| {
         // here we rely on exactly matching LHAPDF's exception string
-        if err.to_string() == format!("Can't find a valid PDF {setname}/{member}") {
-            download_set(setname, config).and_then(|_| callable())
+        if err.to_string() == format!("Info file not found for PDF set '{setname}'") {
+            download_set(setname, config).and_then(|()| callable())
         } else {
             Err(err)
         }
@@ -86,7 +86,7 @@ pub fn pdfset_new(setname: &str) -> Result<UniquePtr<PDFSet>> {
     callable().or_else(|err| {
         // here we rely on exactly matching LHAPDF's exception string
         if err.to_string() == format!("Info file not found for PDF set '{setname}'") {
-            download_set(setname, config).and_then(|_| callable())
+            download_set(setname, config).and_then(|()| callable())
         } else {
             Err(err)
         }
