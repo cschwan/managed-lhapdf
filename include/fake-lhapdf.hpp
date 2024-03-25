@@ -16,10 +16,6 @@
 
 namespace LHAPDF {
 
-std::vector<std::string> const& availablePDFSets() {
-    assert(false);
-}
-
 void setVerbosity(int) {
 }
 

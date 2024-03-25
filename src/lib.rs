@@ -44,7 +44,6 @@ mod ffi {
     unsafe extern "C++" {
         include!("managed-lhapdf/include/lhapdf.hpp");
 
-        fn availablePDFSets() -> &'static CxxVector<CxxString>;
         fn setVerbosity(verbosity: i32);
         fn verbosity() -> i32;
 
@@ -92,15 +91,6 @@ mod ffi {
 
 /// CL percentage for a Gaussian 1-sigma.
 pub const CL_1_SIGMA: f64 = 68.268_949_213_708_58;
-
-/// Get the names of all available PDF sets in the search path.
-#[must_use]
-pub fn available_pdf_sets() -> Vec<String> {
-    ffi::availablePDFSets()
-        .iter()
-        .map(|s| s.to_string_lossy().into_owned())
-        .collect()
-}
 
 /// Convert an LHAID to an LHAPDF set name and member ID.
 #[must_use]
@@ -383,15 +373,6 @@ impl PdfSet {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    #[test]
-    fn available_pdf_sets() {
-        let pdf_sets = super::available_pdf_sets();
-
-        assert!(pdf_sets
-            .iter()
-            .any(|pdf_set| pdf_set == "NNPDF31_nlo_as_0118_luxqed"));
-    }
 
     #[test]
     fn set_verbosity() {

@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - renamed `LhapdfError` to `Error`, which now is an enum of `LhapdfException`
   and `General`, which denote exceptions coming from the C++ library and errors
   from the Rust part, respectively
+- removed the function `available_pdf_sets`: this cannot be efficiently
+  implemented (yet?) when PDF sets are available from multiple repositories
 - raised MSRV to 1.70.0
 
 ## [0.2.4] - 15/01/2024
