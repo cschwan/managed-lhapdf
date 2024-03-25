@@ -9,8 +9,10 @@ use std::sync::OnceLock;
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
-    lhapdf_data_path: Vec<String>,
-    repositories: Vec<String>,
+    lhapdf_data_path_read: Vec<String>,
+    lhapdf_data_path_write: String,
+    pdfsets_index_url: String,
+    pdfset_urls: Vec<String>,
 }
 
 impl Config {
@@ -38,22 +40,25 @@ impl Config {
                 // the file didn't exist before
                 Ok(mut file) => {
                     // use a default configuration
-                    let mut config = Config {
-                        lhapdf_data_path: vec![dirs::data_dir()
-                            .ok_or_else(|| Error::General(format!("no data directory found")))?
+                    let mut config = Self {
+                        lhapdf_data_path_read: vec![],
+                        lhapdf_data_path_write: dirs::data_dir()
+                            .ok_or_else(|| Error::General("no data directory found".to_owned()))?
                             .join("managed-lhapdf")
                             .to_str()
                             // UNWRAP: if the string isn't valid unicode we can't proceed
                             .unwrap()
-                            .to_owned()],
-                        repositories: vec!["https://lhapdfsets.web.cern.ch/current/".to_owned()],
+                            .to_owned(),
+                        pdfsets_index_url: "https://lhapdfsets.web.cern.ch/current/pdfsets.index"
+                            .to_owned(),
+                        pdfset_urls: vec!["https://lhapdfsets.web.cern.ch/current/".to_owned()],
                     };
 
                     // if there's an environment variable that the user set use its value
                     if let Some(os_str) =
                         env::var_os("LHAPDF_DATA_PATH").or_else(|| env::var_os("LHAPATH"))
                     {
-                        config.lhapdf_data_path =
+                        config.lhapdf_data_path_read =
                             // UNWRAP: if the string isn't valid unicode we can't proceed
                             os_str.to_str().unwrap().split(':').map(ToOwned::to_owned).collect();
                     }
@@ -72,10 +77,12 @@ impl Config {
             // we use the environment variable `LHAPDF_DATA_PATH` to let LHAPDF know where we've
             // stored our PDFs
 
+            let mut lhapdf_data_path = vec![config.lhapdf_data_path_write.clone()];
+            lhapdf_data_path.extend(config.lhapdf_data_path_read.iter().cloned());
             // as long as `static Config _cfg` in LHAPDF's `src/Config.cc` is `static` and not
             // `thread_local`, this belongs here; otherwise move it out of the singleton
             // initialization
-            env::set_var("LHAPDF_DATA_PATH", config.lhapdf_data_path.join(":"));
+            env::set_var("LHAPDF_DATA_PATH", lhapdf_data_path.join(":"));
 
             Ok(config)
         });
@@ -85,9 +92,19 @@ impl Config {
         config.as_ref().unwrap()
     }
 
+    /// Return the path where `managed-lhapdf` will download PDF sets and `pdfsets.index` to.
+    pub fn lhapdf_data_path_write(&self) -> &str {
+        &self.lhapdf_data_path_write
+    }
+
+    /// Return the URL where the file `pdfsets.index` will downloaded from.
+    pub fn pdfsets_index_url(&self) -> &str {
+        &self.pdfsets_index_url
+    }
+
     /// Return the URLs that should be searched for PDF sets, if they are not available in the
     /// local cache.
-    pub fn repositories(&self) -> &[String] {
-        &self.repositories
+    pub fn pdfset_urls(&self) -> &[String] {
+        &self.pdfset_urls
     }
 }

@@ -7,9 +7,13 @@ use super::ffi::{self, PDFSet, PDF};
 use super::{Error, Result};
 use cxx::{let_cxx_string, UniquePtr};
 
-fn download_set(_name: &str, _config: &Config) -> Result<()> {
+fn download_set(_name: &str, config: &Config) -> Result<()> {
     // TODO: try to find and download the pdf set from one of the repositories into
     // `lhapdf_data_path`
+
+    let _ = config.lhapdf_data_path_write();
+    let _ = config.pdfset_urls();
+
     Ok(())
 }
 
@@ -18,10 +22,10 @@ fn update_pdfsets_index(config: &Config) -> Result<()> {
     // re-initialization of this variable
     ffi::empty_lhaindex();
 
-    // suppress warning
-    let _ = config.repositories();
-
     // TODO: download updated `pdfsets.index`
+
+    let _ = config.lhapdf_data_path_write();
+    let _ = config.pdfsets_index_url();
 
     Ok(())
 }
