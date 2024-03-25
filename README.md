@@ -2,7 +2,7 @@
 [![codecov](https://codecov.io/gh/cschwan/managed-lhapdf/graph/badge.svg?token=H8Q8JHXY1K)](https://codecov.io/gh/cschwan/managed-lhapdf)
 [![Documentation](https://docs.rs/lhapdf/badge.svg)](https://docs.rs/managed-lhapdf)
 [![crates.io](https://img.shields.io/crates/v/managed-lhapdf.svg)](https://crates.io/crates/managed-lhapdf)
-![MSRV](https://img.shields.io/badge/Rust-1.70+-lightgray.svg)]
+![MSRV](https://img.shields.io/badge/Rust-1.70+-lightgray.svg)
 
 # Description
 
