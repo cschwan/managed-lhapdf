@@ -20,8 +20,13 @@ impl Config {
 
         let config = SINGLETON.get_or_init(|| {
             let config_path = dirs::config_dir()
-                .ok_or_else(|| Error::General(format!("no configuration directory found")))?
-                .join("managed-lhapdf.toml");
+                .ok_or_else(|| Error::General(format!("no configuration directory found")))?;
+
+            // create the configuration directory if it doesn't exist yet - in practice this only
+            // happens in our CI
+            fs::create_dir_all(&config_path).map_err(|err| Error::General(format!("{err}")))?;
+
+            let config_path = config_path.join("managed-lhapdf.toml");
 
             // MSRV 1.77.0: use `File::create_new` instead
             let config = match File::options()
