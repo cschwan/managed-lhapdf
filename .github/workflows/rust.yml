@@ -1,6 +1,7 @@
 name: Rust
 
-on: [pull_request, push]
+on:
+  push:
 
 defaults:
   run:
@@ -15,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/nnpdf/pineappl-ci:latest
     steps:
+      # checkout@v4 uses a newer version of Node that's incompatible with our container's GLIBC
       - uses: actions/checkout@v3
 
       - name: Run tests
@@ -30,10 +32,8 @@ jobs:
           ( sed -nE 's/[[:space:]]+Running( unittests|) [^[:space:]]+ \(([^)]+)\)/\2/p' stderr | tr ' ' "\n" ) | \
               xargs printf ' --object %s' | \
               xargs $(rustc --print target-libdir)/../bin/llvm-cov export \
-                  --ignore-filename-regex='/.cargo/registry' \
-                  --ignore-filename-regex='/cargo/registry' \
+                  --ignore-filename-regex='index.crates.io' \
                   --ignore-filename-regex='rustc' \
-                  --ignore-filename-regex='lhapdf/tests' \
                   --instr-profile=lhapdf.profdata \
                   --skip-functions \
                   --format lcov > lcov.info
