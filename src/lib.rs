@@ -362,7 +362,7 @@ impl PdfSet {
         cl: f64,
         alternative: bool,
     ) -> Result<PdfUncertainty> {
-        ffi::pdf_uncertainty(&self.ptr, values, cl, alternative).map_err(Error::LhapdfException)
+        Ok(ffi::pdf_uncertainty(&self.ptr, values, cl, alternative)?)
     }
 }
 

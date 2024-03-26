@@ -82,10 +82,9 @@ pub fn pdf_with_setname_and_member(setname: &str, member: i32) -> Result<UniqueP
 
     let_cxx_string!(cxx_setname = setname.to_string());
 
-    let callable =
-        || ffi::pdf_with_setname_and_member(&cxx_setname, member).map_err(Error::LhapdfException);
+    let callable = || Ok(ffi::pdf_with_setname_and_member(&cxx_setname, member)?);
 
-    callable().or_else(|err| {
+    callable().or_else(|err: Error| {
         // here we rely on exactly matching LHAPDF's exception string
         if err.to_string() == format!("Info file not found for PDF set '{setname}'") {
             download_set(setname, config).and_then(|()| callable())
@@ -101,9 +100,9 @@ pub fn pdfset_new(setname: &str) -> Result<UniquePtr<PDFSet>> {
 
     let_cxx_string!(cxx_setname = setname);
 
-    let callable = || ffi::pdfset_new(&cxx_setname).map_err(Error::LhapdfException);
+    let callable = || Ok(ffi::pdfset_new(&cxx_setname)?);
 
-    callable().or_else(|err| {
+    callable().or_else(|err: Error| {
         // here we rely on exactly matching LHAPDF's exception string
         if err.to_string() == format!("Info file not found for PDF set '{setname}'") {
             download_set(setname, config).and_then(|()| callable())

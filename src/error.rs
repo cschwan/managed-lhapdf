@@ -18,6 +18,12 @@ pub enum Error {
 /// Type definition for results with an [`Error`].
 pub type Result<T> = std::result::Result<T, Error>;
 
+impl From<Exception> for Error {
+    fn from(err: Exception) -> Self {
+        Self::LhapdfException(err)
+    }
+}
+
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Self {
         Self::Other(anyhow::Error::new(err))
