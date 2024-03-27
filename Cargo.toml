@@ -28,6 +28,7 @@ pkg-config = "0.3"
 
 [features]
 docs-only = []
+static = []
 
 [package.metadata.docs.rs]
 features = [ "docs-only" ]
