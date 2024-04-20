@@ -10,6 +10,15 @@
 library, with automatic management functions. This is the successor of
 <https://github.com/cschwan/lhapdf>.
 
+# Rust feature flags
+
+- `managed`: this feature flag enables the automatic downloading of PDFs. If
+  you would like to disable this feature, specify `no-default-features = true`
+  when depending on `managed-lhapdf`.
+- `static`: when enabled, the LHAPDF library will be linked statically. This
+  allows to redistribute built binaries that run on systems where LHAPDF isn't
+  installed.
+
 # (Un)safeness
 
 The struct `Pdf` implements `Send` and `Sync`, which is only safe as long as
