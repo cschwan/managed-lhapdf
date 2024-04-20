@@ -238,7 +238,10 @@ impl PdfSet {
     }
 
     /// Make all the PDFs in this set.
-    #[must_use]
+    ///
+    /// # Errors
+    ///
+    /// TODO
     pub fn mk_pdfs(&self) -> Result<Vec<Pdf>> {
         let setname = self.name();
 

@@ -37,7 +37,7 @@ impl From<reqwest::Error> for Error {
 struct LhapdfData;
 
 impl LhapdfData {
-    fn get() -> &'static Mutex<LhapdfData> {
+    fn get() -> &'static Mutex<Self> {
         static SINGLETON: Mutex<LhapdfData> = Mutex::new(LhapdfData);
         &SINGLETON
     }
@@ -97,7 +97,7 @@ impl LhapdfData {
     }
 
     fn set_verbosity(&self, verbosity: i32) {
-        unmanaged::set_verbosity(verbosity)
+        unmanaged::set_verbosity(verbosity);
     }
 
     fn verbosity(&self) -> i32 {

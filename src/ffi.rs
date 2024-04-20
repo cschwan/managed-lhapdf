@@ -1,5 +1,7 @@
 pub use ffi::*;
 
+// ALLOW: as soon as the `cxx` offers a `#![cxx::bridge]` we can get rid of the `mod ffi`
+#[allow(clippy::module_inception)]
 #[cxx::bridge]
 mod ffi {
     // The type `PdfUncertainty` must be separate from the one defined in the C++ namespace LHAPDF
