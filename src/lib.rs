@@ -3,9 +3,17 @@
 
 //! (Unofficial) Rust wrapper for the [LHAPDF](https://lhapdf.hepforge.org) C++ library.
 
+#[cfg(feature = "managed")]
 mod config;
 mod error;
+#[cfg(feature = "managed")]
 mod manager;
+mod unmanaged;
+
+#[cfg(not(feature = "managed"))]
+mod manager {
+    pub use super::unmanaged::*;
+}
 
 use cxx::{let_cxx_string, CxxVector, UniquePtr};
 use std::fmt::{self, Formatter};
@@ -76,7 +84,9 @@ mod ffi {
         fn pdfset_new(setname: &CxxString) -> Result<UniquePtr<PDFSet>>;
         fn pdfset_setname(pdf: &PDFSet, setname: Pin<&mut CxxString>);
 
+        #[cfg(feature = "managed")]
         fn empty_lhaindex();
+
         fn lookup_pdf_setname(lhaid: i32, setname: Pin<&mut CxxString>);
         fn lookup_pdf_memberid(lhaid: i32) -> i32;
         fn get_pdfset_error_type(set: &PDFSet, setname: Pin<&mut CxxString>);

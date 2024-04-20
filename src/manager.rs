@@ -4,8 +4,9 @@
 
 use super::config::Config;
 use super::ffi::{self, PDFSet, PDF};
+use super::unmanaged;
 use super::{Error, Result};
-use cxx::{let_cxx_string, UniquePtr};
+use cxx::UniquePtr;
 use flate2::read::GzDecoder;
 use reqwest::blocking;
 use reqwest::StatusCode;
@@ -14,6 +15,24 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use tar::Archive;
+
+impl From<toml::ser::Error> for Error {
+    fn from(err: toml::ser::Error) -> Self {
+        Self::Other(anyhow::Error::new(err))
+    }
+}
+
+impl From<toml::de::Error> for Error {
+    fn from(err: toml::de::Error) -> Self {
+        Self::Other(anyhow::Error::new(err))
+    }
+}
+
+impl From<reqwest::Error> for Error {
+    fn from(err: reqwest::Error) -> Self {
+        Self::Other(anyhow::Error::new(err))
+    }
+}
 
 struct LhapdfData;
 
@@ -66,39 +85,23 @@ impl LhapdfData {
     }
 
     pub fn pdf_name_and_member_via_lhaid(&self, lhaid: i32) -> Option<(String, i32)> {
-        let_cxx_string!(cxx_setname = "");
-        ffi::lookup_pdf_setname(lhaid, cxx_setname.as_mut());
-
-        // UNWRAP: if `setname` contains any non-UTF8 bytes there's an error somewhere else
-        let setname = cxx_setname.to_str().unwrap();
-        let memberid = ffi::lookup_pdf_memberid(lhaid);
-
-        if setname.is_empty() && (memberid == -1) {
-            None
-        } else {
-            Some((setname.to_owned(), memberid))
-        }
+        unmanaged::pdf_name_and_member_via_lhaid(lhaid)
     }
 
     fn pdf_with_setname_and_member(&self, setname: &str, member: i32) -> Result<UniquePtr<PDF>> {
-        let_cxx_string!(cxx_setname = setname.to_string());
-        Ok(ffi::pdf_with_setname_and_member(&cxx_setname, member)?)
+        unmanaged::pdf_with_setname_and_member(setname, member)
     }
 
     fn pdfset_new(&self, setname: &str) -> Result<UniquePtr<PDFSet>> {
-        let_cxx_string!(cxx_setname = setname);
-        Ok(ffi::pdfset_new(&cxx_setname)?)
+        unmanaged::pdfset_new(setname)
     }
 
     fn set_verbosity(&self, verbosity: i32) {
-        // this modifies a `static` variable in C++, beware of threads calling this function at the
-        // same time
-        ffi::setVerbosity(verbosity);
+        unmanaged::set_verbosity(verbosity)
     }
 
     fn verbosity(&self) -> i32 {
-        // accesses a `static` variable in C++
-        ffi::verbosity()
+        unmanaged::verbosity()
     }
 }
 

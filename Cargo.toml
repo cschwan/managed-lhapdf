@@ -14,20 +14,22 @@ rust-version = "1.70.0"
 [dependencies]
 anyhow = "1.0.79"
 cxx = "1.0.65"
-dirs = "5.0.1"
-flate2 = "1.0.22"
-reqwest = { default-features = false, features = ["blocking", "rustls-tls"], version = "0.12.2" }
+dirs = { optional = true, version = "5.0.1" }
+flate2 = { optional = true, version = "1.0.22" }
+reqwest = { default-features = false, features = ["blocking", "rustls-tls"], optional = true, version = "0.12.2" }
 serde = { features = ["derive"], version = "1.0.130" }
-tar = "0.4.38"
+tar = { optional = true, version = "0.4.38" }
 thiserror = "1.0.30"
-toml = { features = ["display", "parse"], version = "0.8.12" }
+toml = { features = ["display", "parse"], optional = true, version = "0.8.12" }
 
 [build-dependencies]
 cxx-build = "1.0.107"
 pkg-config = "0.3"
 
 [features]
+default = ["managed"]
 docs-only = []
+managed = ["dep:dirs", "dep:flate2", "dep:reqwest", "dep:tar", "dep:toml"]
 static = []
 
 [package.metadata.docs.rs]

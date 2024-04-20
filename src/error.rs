@@ -29,21 +29,3 @@ impl From<std::io::Error> for Error {
         Self::Other(anyhow::Error::new(err))
     }
 }
-
-impl From<toml::ser::Error> for Error {
-    fn from(err: toml::ser::Error) -> Self {
-        Self::Other(anyhow::Error::new(err))
-    }
-}
-
-impl From<toml::de::Error> for Error {
-    fn from(err: toml::de::Error) -> Self {
-        Self::Other(anyhow::Error::new(err))
-    }
-}
-
-impl From<reqwest::Error> for Error {
-    fn from(err: reqwest::Error) -> Self {
-        Self::Other(anyhow::Error::new(err))
-    }
-}
