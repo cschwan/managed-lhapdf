@@ -83,11 +83,11 @@ impl Pdf {
 
     /// Create a new PDF with the given PDF set name and member ID as a single string.
     ///
-    /// The format of the `setname_nmem` string is <setname>/<nmem> where <nmem> must be parseable
-    /// as a positive integer. The `/` character is not permitted in set names due to clashes with
-    /// Unix filesystem path syntax.
+    /// The format of the `setname_nmem` string is `<setname>/<nmem>` where `<nmem>` must be
+    /// parseable as a positive integer. The `/` character is not permitted in set names due to
+    /// clashes with Unix filesystem path syntax.
     ///
-    /// If no /<nmem> is given, member number 0 will be used.
+    /// If no `/<nmem>` is given, member number 0 will be used.
     ///
     /// # Errors
     ///

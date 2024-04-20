@@ -15,7 +15,7 @@ pub enum Error {
     Other(anyhow::Error),
 }
 
-/// Type definition for results with an [`Error`].
+/// Type definition for results with an [`enum@Error`].
 pub type Result<T> = std::result::Result<T, Error>;
 
 impl From<Exception> for Error {
