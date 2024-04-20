@@ -5,7 +5,7 @@ fn main() {
         .probe("lhapdf")
         .unwrap();
 
-    let mut build = cxx_build::bridge("src/lib.rs");
+    let mut build = cxx_build::bridge("src/ffi.rs");
 
     for include_path in lhapdf.include_paths {
         build.include(include_path);
