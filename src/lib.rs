@@ -3,8 +3,6 @@
 
 //! (Unofficial) Rust wrapper for the [LHAPDF](https://lhapdf.hepforge.org) C++ library.
 
-#[cfg(feature = "managed")]
-mod config;
 mod error;
 mod ffi;
 #[cfg(feature = "managed")]
