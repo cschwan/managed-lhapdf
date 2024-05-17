@@ -7,11 +7,13 @@ use super::unmanaged;
 use super::{Error, Result};
 use cxx::UniquePtr;
 use flate2::read::GzDecoder;
+use fs2::FileExt;
 use reqwest::{blocking, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs::{self, File};
 use std::io::{ErrorKind, Write};
+use std::path::Path;
 use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 use tar::Archive;
@@ -57,6 +59,9 @@ impl Config {
             fs::create_dir_all(&config_path)?;
 
             let config_path = config_path.join("managed-lhapdf.toml");
+
+            // TODO: it's possible that multiple processes try to create the default configuration
+            // file and/or that while the file is created, other processes try to read from it
 
             // MSRV 1.77.0: use `File::create_new` instead
             let config = match File::options()
@@ -191,8 +196,9 @@ impl LhapdfData {
     }
 
     fn download_set(&self, name: &str, config: &Config) -> Result<()> {
-        // TODO: this function has a race condition if there multiple processes (not multiple
-        // threads) that try to create the same file
+        let lock_file =
+            File::open(Path::new(config.lhapdf_data_path_write()).join(format!("{name}.lock")))?;
+        lock_file.lock_exclusive()?;
 
         for url in config.pdfset_urls() {
             let response = blocking::get(format!("{url}/{name}.tar.gz"))?;
@@ -210,12 +216,15 @@ impl LhapdfData {
             break;
         }
 
+        lock_file.unlock()?;
+
         Ok(())
     }
 
     fn update_pdfsets_index(&self, config: &Config) -> Result<()> {
-        // TODO: this function has a race condition if there multiple processes (not multiple
-        // threads) that try to create the same file
+        let lock_file =
+            File::open(Path::new(config.lhapdf_data_path_write()).join("pdfsets.lock"))?;
+        lock_file.lock_exclusive()?;
 
         // empty the `static thread_local` variable sitting in `getPDFIndex` to trigger the
         // re-initialization of this variable
@@ -228,6 +237,8 @@ impl LhapdfData {
 
         // TODO: what if multiple threads/processes try to write to the same file?
         File::create(pdfsets_index)?.write_all(content.as_bytes())?;
+
+        lock_file.unlock()?;
 
         Ok(())
     }
