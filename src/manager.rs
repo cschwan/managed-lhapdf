@@ -204,7 +204,7 @@ impl LhapdfData {
     fn download_set(&self, name: &str, config: &Config) -> Result<()> {
         if let Some(lhapdf_data_path_write) = config.lhapdf_data_path_write() {
             let lock_file =
-                File::open(Path::new(lhapdf_data_path_write).join(format!("{name}.lock")))?;
+                File::create(Path::new(lhapdf_data_path_write).join(format!("{name}.lock")))?;
             lock_file.lock_exclusive()?;
 
             for url in config.pdfset_urls() {
@@ -231,7 +231,7 @@ impl LhapdfData {
 
     fn update_pdfsets_index(&self, config: &Config) -> Result<()> {
         if let Some(lhapdf_data_path_write) = config.lhapdf_data_path_write() {
-            let lock_file = File::open(Path::new(lhapdf_data_path_write).join("pdfsets.lock"))?;
+            let lock_file = File::create(Path::new(lhapdf_data_path_write).join("pdfsets.lock"))?;
             lock_file.lock_exclusive()?;
 
             // empty the `static thread_local` variable sitting in `getPDFIndex` to trigger the
