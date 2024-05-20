@@ -29,17 +29,17 @@ fn main() {
         println!("cargo:rustc-link-lib={link_modifier}{lib}");
     }
 
-    println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=include/wrappers.hpp");
+    println!("cargo:rerun-if-changed=src/ffi.rs");
 }
 
 #[cfg(feature = "docs-only")]
 fn main() {
-    cxx_build::bridge("src/lib.rs")
+    cxx_build::bridge("src/ffi.rs")
         .define("FAKE_WRAPPERS", "1")
         .compile("managed-lhapdf-rust-cxx-bridge");
 
-    println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=include/fake-lhapdf.hpp");
     println!("cargo:rerun-if-changed=include/wrappers.hpp");
+    println!("cargo:rerun-if-changed=src/ffi.rs");
 }
