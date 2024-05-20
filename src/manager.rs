@@ -14,7 +14,6 @@ use std::env;
 use std::fs::{self, File};
 use std::io::{ErrorKind, Write};
 use std::path::Path;
-use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 use tar::Archive;
 
@@ -107,39 +106,42 @@ impl Config {
                 Err(err) => Err(err)?,
             };
 
-            // create download directory for `lhapdf.conf`
-            fs::create_dir_all(config.lhapdf_data_path_write())?;
+            if let Some(lhapdf_data_path_write) = config.lhapdf_data_path_write() {
+                // create download directory for `lhapdf.conf`
+                fs::create_dir_all(lhapdf_data_path_write)?;
 
-            // MSRV 1.77.0: use `File::create_new` instead
-            if let Ok(mut file) = File::options()
-                .read(true)
-                .write(true)
-                .create_new(true)
-                .open(PathBuf::from(config.lhapdf_data_path_write()).join("lhapdf.conf"))
-            {
-                // if `lhapdf.conf` doesn't exist, create it
-                file.write_all(LHAPDF_CONFIG.as_bytes())?;
-            }
+                // MSRV 1.77.0: use `File::create_new` instead
+                if let Ok(mut file) = File::options()
+                    .read(true)
+                    .write(true)
+                    .create_new(true)
+                    .open(Path::new(lhapdf_data_path_write).join("lhapdf.conf"))
+                {
+                    // if `lhapdf.conf` doesn't exist, create it
+                    file.write_all(LHAPDF_CONFIG.as_bytes())?;
+                }
 
-            let pdfsets_index =
-                PathBuf::from(config.lhapdf_data_path_write()).join("pdfsets.index");
+                let pdfsets_index = Path::new(lhapdf_data_path_write).join("pdfsets.index");
 
-            // MSRV 1.77.0: use `File::create_new` instead
-            if let Ok(mut file) = File::options()
-                .read(true)
-                .write(true)
-                .create_new(true)
-                .open(pdfsets_index)
-            {
-                // if `pdfsets.index` doesn't exist, download it
-                let content = blocking::get(config.pdfsets_index_url())?.text()?;
-                file.write_all(content.as_bytes())?;
+                // MSRV 1.77.0: use `File::create_new` instead
+                if let Ok(mut file) = File::options()
+                    .read(true)
+                    .write(true)
+                    .create_new(true)
+                    .open(pdfsets_index)
+                {
+                    // if `pdfsets.index` doesn't exist, download it
+                    let content = blocking::get(config.pdfsets_index_url())?.text()?;
+                    file.write_all(content.as_bytes())?;
+                }
             }
 
             // we use the environment variable `LHAPDF_DATA_PATH` to let LHAPDF know where we've
             // stored our PDFs
 
-            let mut lhapdf_data_path = vec![config.lhapdf_data_path_write.clone()];
+            let mut lhapdf_data_path = config
+                .lhapdf_data_path_write()
+                .map_or_else(Vec::new, |path| vec![path.to_owned()]);
             lhapdf_data_path.extend(config.lhapdf_data_path_read.iter().cloned());
             // as long as `static Config _cfg` in LHAPDF's `src/Config.cc` is `static` and not
             // `thread_local`, this belongs here; otherwise move it out of the singleton
@@ -155,8 +157,12 @@ impl Config {
     }
 
     /// Return the path where `managed-lhapdf` will download PDF sets and `pdfsets.index` to.
-    pub fn lhapdf_data_path_write(&self) -> &str {
-        &self.lhapdf_data_path_write
+    pub fn lhapdf_data_path_write(&self) -> Option<&str> {
+        if self.lhapdf_data_path_write.is_empty() {
+            None
+        } else {
+            Some(&self.lhapdf_data_path_write)
+        }
     }
 
     /// Return the URL where the file `pdfsets.index` will downloaded from.
@@ -196,49 +202,52 @@ impl LhapdfData {
     }
 
     fn download_set(&self, name: &str, config: &Config) -> Result<()> {
-        let lock_file =
-            File::open(Path::new(config.lhapdf_data_path_write()).join(format!("{name}.lock")))?;
-        lock_file.lock_exclusive()?;
+        if let Some(lhapdf_data_path_write) = config.lhapdf_data_path_write() {
+            let lock_file =
+                File::open(Path::new(lhapdf_data_path_write).join(format!("{name}.lock")))?;
+            lock_file.lock_exclusive()?;
 
-        for url in config.pdfset_urls() {
-            let response = blocking::get(format!("{url}/{name}.tar.gz"))?;
+            for url in config.pdfset_urls() {
+                let response = blocking::get(format!("{url}/{name}.tar.gz"))?;
 
-            if response.status() == StatusCode::NOT_FOUND {
-                continue;
+                if response.status() == StatusCode::NOT_FOUND {
+                    continue;
+                }
+
+                let content = response.bytes()?;
+
+                // TODO: what if multiple threads/processes try to write to the same file?
+                Archive::new(GzDecoder::new(&content[..])).unpack(lhapdf_data_path_write)?;
+
+                // we found a PDF set, now it's LHAPDF's turn
+                break;
             }
 
-            let content = response.bytes()?;
-
-            // TODO: what if multiple threads/processes try to write to the same file?
-            Archive::new(GzDecoder::new(&content[..])).unpack(config.lhapdf_data_path_write())?;
-
-            // we found a PDF set, now it's LHAPDF's turn
-            break;
+            lock_file.unlock()?;
         }
-
-        lock_file.unlock()?;
 
         Ok(())
     }
 
     fn update_pdfsets_index(&self, config: &Config) -> Result<()> {
-        let lock_file =
-            File::open(Path::new(config.lhapdf_data_path_write()).join("pdfsets.lock"))?;
-        lock_file.lock_exclusive()?;
+        if let Some(lhapdf_data_path_write) = config.lhapdf_data_path_write() {
+            let lock_file = File::open(Path::new(lhapdf_data_path_write).join("pdfsets.lock"))?;
+            lock_file.lock_exclusive()?;
 
-        // empty the `static thread_local` variable sitting in `getPDFIndex` to trigger the
-        // re-initialization of this variable
-        ffi::empty_lhaindex();
+            // empty the `static thread_local` variable sitting in `getPDFIndex` to trigger the
+            // re-initialization of this variable
+            ffi::empty_lhaindex();
 
-        // download `pdfsets.index`
-        let content = blocking::get(config.pdfsets_index_url())?.text()?;
+            // download `pdfsets.index`
+            let content = blocking::get(config.pdfsets_index_url())?.text()?;
 
-        let pdfsets_index = PathBuf::from(config.lhapdf_data_path_write()).join("pdfsets.index");
+            let pdfsets_index = Path::new(lhapdf_data_path_write).join("pdfsets.index");
 
-        // TODO: what if multiple threads/processes try to write to the same file?
-        File::create(pdfsets_index)?.write_all(content.as_bytes())?;
+            // TODO: what if multiple threads/processes try to write to the same file?
+            File::create(pdfsets_index)?.write_all(content.as_bytes())?;
 
-        lock_file.unlock()?;
+            lock_file.unlock()?;
+        }
 
         Ok(())
     }
