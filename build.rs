@@ -1,11 +1,5 @@
 #[cfg(not(feature = "docs-only"))]
 fn main() {
-    let lhapdf = pkg_config::Config::new()
-        .atleast_version("6")
-        .statik(cfg!(feature = "static"))
-        .probe("lhapdf")
-        .unwrap();
-
     let mut build = cxx_build::bridge("src/ffi.rs");
 
     for include_path in lhapdf.include_paths {
@@ -18,6 +12,13 @@ fn main() {
 
     println!("cargo:rerun-if-changed=include/wrappers.hpp");
     println!("cargo:rerun-if-changed=src/ffi.rs");
+
+    // ordering of this ordering is potentially significant
+    let lhapdf = pkg_config::Config::new()
+        .atleast_version("6")
+        .statik(cfg!(feature = "static"))
+        .probe("lhapdf")
+        .unwrap();
 }
 
 #[cfg(feature = "docs-only")]
