@@ -2,6 +2,7 @@
 fn main() {
     let lhapdf = pkg_config::Config::new()
         .atleast_version("6")
+        .statik(cfg!(feature = "static"))
         .probe("lhapdf")
         .unwrap();
 
