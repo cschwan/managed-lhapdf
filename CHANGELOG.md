@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- even more fixes to the static linking process to workaround a bug in the
+  `pkg-config` crate
+
 ## [0.3.2] - 26/06/2024
 
 - more fixes to the linking process
