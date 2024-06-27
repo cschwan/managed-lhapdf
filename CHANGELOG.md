@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 27/06/2024
+
 - even more fixes to the static linking process to workaround a bug in the
   `pkg-config` crate
 
@@ -31,7 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   implemented (yet?) when PDF sets are available from multiple repositories
 - raised MSRV to 1.70.0
 
-[Unreleased]: https://github.com/cschwan/managed-lhapdf/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/cschwan/managed-lhapdf/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/cschwan/managed-lhapdf/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/cschwan/managed-lhapdf/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/cschwan/managed-lhapdf/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/cschwan/managed-lhapdf/compare/v0.2.4...v0.3.0
