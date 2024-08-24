@@ -1,2 +1,2 @@
-ignore:
-  - "target/**/*"
+github_checks:
+  annotations: false
