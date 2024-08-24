@@ -8,10 +8,10 @@ use super::{Error, Result};
 use cxx::UniquePtr;
 use flate2::read::GzDecoder;
 use fs2::FileExt;
-use reqwest::{blocking, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs::{self, File};
+use std::io;
 use std::io::{ErrorKind, Write};
 use std::path::Path;
 use std::sync::{Mutex, OnceLock};
@@ -131,8 +131,8 @@ impl Config {
                     .open(pdfsets_index)
                 {
                     // if `pdfsets.index` doesn't exist, download it
-                    let content = blocking::get(config.pdfsets_index_url())?.text()?;
-                    file.write_all(content.as_bytes())?;
+                    let mut reader = ureq::get(config.pdfsets_index_url()).call()?.into_reader();
+                    io::copy(&mut reader, &mut file)?;
                 }
             }
 
@@ -189,8 +189,8 @@ impl From<toml::de::Error> for Error {
     }
 }
 
-impl From<reqwest::Error> for Error {
-    fn from(err: reqwest::Error) -> Self {
+impl From<ureq::Error> for Error {
+    fn from(err: ureq::Error) -> Self {
         Self::Other(anyhow::Error::new(err))
     }
 }
@@ -208,16 +208,16 @@ impl LhapdfData {
             lock_file.lock_exclusive()?;
 
             for url in config.pdfset_urls() {
-                let response = blocking::get(format!("{url}/{name}.tar.gz"))?;
+                let response = ureq::get(&format!("{url}/{name}.tar.gz")).call();
 
-                if response.status() == StatusCode::NOT_FOUND {
+                if let Err(ureq::Error::Status(404, _)) = response {
                     continue;
                 }
 
-                let content = response.bytes()?;
+                let reader = response?.into_reader();
 
                 // TODO: what if multiple threads/processes try to write to the same file?
-                Archive::new(GzDecoder::new(&content[..])).unpack(lhapdf_data_path_write)?;
+                Archive::new(GzDecoder::new(reader)).unpack(lhapdf_data_path_write)?;
 
                 // we found a PDF set, now it's LHAPDF's turn
                 break;
@@ -239,7 +239,9 @@ impl LhapdfData {
             ffi::empty_lhaindex();
 
             // download `pdfsets.index`
-            let content = blocking::get(config.pdfsets_index_url())?.text()?;
+            let content = ureq::get(config.pdfsets_index_url())
+                .call()?
+                .into_string()?;
 
             let pdfsets_index = Path::new(lhapdf_data_path_write).join("pdfsets.index");
 

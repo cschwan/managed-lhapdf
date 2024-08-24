@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- replaced `reqwest` in favor of `ureq` to minimize dependencies
+
 ## [0.3.3] - 27/06/2024
 
 - even more fixes to the static linking process to workaround a bug in the
