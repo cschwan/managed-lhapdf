@@ -25,12 +25,12 @@ library, with automatic management functions. This is the successor of
 If enabled, this crate automatically downloads the required PDF sets. The
 behavior can be controlled with the configuration file `managed-lhapdf.toml` in
 the [user's data directory](https://docs.rs/dirs/latest/dirs/fn.data_dir.html).
-This file is automatically created if it does not exist. The configuration
-should look similar to the following one:
+This file is automatically created if it does not exist. An example of a
+customized configuration looks as follows:
 
 ```toml
 # these paths are scanned for PDF sets, in the given order, and multiple paths
-# can be given as # strings seperated by commas. This crate will *not* write into
+# can be given as strings seperated by commas. This crate will *not* write into
 # any of these directories
 lhapdf_data_path_read = []
 # if the following path is an empty string, nothing will be automatically
