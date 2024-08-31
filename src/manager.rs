@@ -12,8 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::ffi::OsString;
 use std::fs::{self, File};
-use std::io;
-use std::io::{ErrorKind, Write};
+use std::io::{self, ErrorKind, Write};
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
@@ -75,6 +74,17 @@ impl Default for Config {
 
         config
     }
+}
+
+fn get_url(url: &Url) -> Result<Box<dyn std::io::Read + Send + Sync + 'static>> {
+    ureq::request_url("GET", url)
+        .call()
+        .map_err(|err| match err {
+            // we need to catch 404 errors so we can potentially retry
+            ureq::Error::Status(404, _) => Error::Http404,
+            err @ _ => Error::Other(anyhow::Error::new(err)),
+        })
+        .map(ureq::Response::into_reader)
 }
 
 struct LhapdfData;
@@ -143,9 +153,7 @@ impl Config {
                     .open(pdfsets_index)
                 {
                     // if `pdfsets.index` doesn't exist, download it
-                    let mut reader = ureq::request_url("GET", config.pdfsets_index_url())
-                        .call()?
-                        .into_reader();
+                    let mut reader = get_url(config.pdfsets_index_url())?;
                     io::copy(&mut reader, &mut file)?;
                 }
             }
@@ -206,12 +214,6 @@ impl From<toml::de::Error> for Error {
     }
 }
 
-impl From<ureq::Error> for Error {
-    fn from(err: ureq::Error) -> Self {
-        Self::Other(anyhow::Error::new(err))
-    }
-}
-
 impl From<url::ParseError> for Error {
     fn from(err: url::ParseError) -> Self {
         Self::Other(anyhow::Error::new(err))
@@ -230,17 +232,14 @@ impl LhapdfData {
             lock_file.lock_exclusive()?;
 
             for url in config.pdfset_urls() {
-                let response =
-                    ureq::request_url("GET", &url.join(&format!("{name}.tar.gz"))?).call();
+                let response = get_url(&url.join(&format!("{name}.tar.gz"))?);
 
-                if let Err(ureq::Error::Status(404, _)) = response {
+                // if the URL didn't have the PDF set, try the next one
+                if let Err(Error::Http404) = response {
                     continue;
                 }
 
-                let reader = response?.into_reader();
-
-                // TODO: what if multiple threads/processes try to write to the same file?
-                Archive::new(GzDecoder::new(reader)).unpack(lhapdf_data_path_write)?;
+                Archive::new(GzDecoder::new(response?)).unpack(lhapdf_data_path_write)?;
 
                 // we found a PDF set, now it's LHAPDF's turn
                 break;
@@ -262,14 +261,11 @@ impl LhapdfData {
             ffi::empty_lhaindex();
 
             // download `pdfsets.index`
-            let content = ureq::request_url("GET", config.pdfsets_index_url())
-                .call()?
-                .into_string()?;
-
-            let pdfsets_index = lhapdf_data_path_write.join("pdfsets.index");
-
-            // TODO: what if multiple threads/processes try to write to the same file?
-            File::create(pdfsets_index)?.write_all(content.as_bytes())?;
+            let mut reader = get_url(config.pdfsets_index_url())?;
+            io::copy(
+                &mut reader,
+                &mut File::create(lhapdf_data_path_write.join("pdfsets.index"))?,
+            )?;
 
             lock_file.unlock()?;
         }

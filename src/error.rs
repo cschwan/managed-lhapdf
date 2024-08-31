@@ -10,6 +10,9 @@ pub enum Error {
     /// General error with a message.
     #[error("{0}")]
     General(String),
+    /// A 404 'file not found' error when trying to download a file over HTTP.
+    #[error("file not found")]
+    Http404,
     /// Errors from within this library.
     #[error(transparent)]
     Other(anyhow::Error),
