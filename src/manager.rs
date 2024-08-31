@@ -18,6 +18,7 @@ use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 use tar::Archive;
+use url::Url;
 
 const LHAPDF_CONFIG: &str = "Verbosity: 1
 Interpolator: logcubic
@@ -40,8 +41,8 @@ Pythia6LambdaV5Compat: true
 pub struct Config {
     lhapdf_data_path_read: Vec<PathBuf>,
     lhapdf_data_path_write: PathBuf,
-    pdfsets_index_url: String,
-    pdfset_urls: Vec<String>,
+    pdfsets_index_url: Url,
+    pdfset_urls: Vec<Url>,
 }
 
 impl Default for Config {
@@ -53,8 +54,11 @@ impl Default for Config {
                 // temporary directory
                 .unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| env::temp_dir()))
                 .join("managed-lhapdf"),
-            pdfsets_index_url: "https://lhapdfsets.web.cern.ch/current/pdfsets.index".to_owned(),
-            pdfset_urls: vec!["https://lhapdfsets.web.cern.ch/current/".to_owned()],
+            // UNWRAP: a panic means the static string is malformed
+            pdfsets_index_url: Url::parse("https://lhapdfsets.web.cern.ch/current/pdfsets.index")
+                .unwrap(),
+            // UNWRAP: a panic means the static string is malformed
+            pdfset_urls: vec![Url::parse("https://lhapdfsets.web.cern.ch/current/").unwrap()],
         };
 
         // if there's an environment variable that the user set use its value
@@ -139,7 +143,9 @@ impl Config {
                     .open(pdfsets_index)
                 {
                     // if `pdfsets.index` doesn't exist, download it
-                    let mut reader = ureq::get(config.pdfsets_index_url()).call()?.into_reader();
+                    let mut reader = ureq::request_url("GET", config.pdfsets_index_url())
+                        .call()?
+                        .into_reader();
                     io::copy(&mut reader, &mut file)?;
                 }
             }
@@ -177,13 +183,13 @@ impl Config {
     }
 
     /// Return the URL where the file `pdfsets.index` will downloaded from.
-    pub fn pdfsets_index_url(&self) -> &str {
+    pub fn pdfsets_index_url(&self) -> &Url {
         &self.pdfsets_index_url
     }
 
     /// Return the URLs that should be searched for PDF sets, if they are not available in the
     /// local cache.
-    pub fn pdfset_urls(&self) -> &[String] {
+    pub fn pdfset_urls(&self) -> &[Url] {
         &self.pdfset_urls
     }
 }
@@ -206,6 +212,12 @@ impl From<ureq::Error> for Error {
     }
 }
 
+impl From<url::ParseError> for Error {
+    fn from(err: url::ParseError) -> Self {
+        Self::Other(anyhow::Error::new(err))
+    }
+}
+
 impl LhapdfData {
     fn get() -> &'static Mutex<Self> {
         static SINGLETON: Mutex<LhapdfData> = Mutex::new(LhapdfData);
@@ -218,7 +230,8 @@ impl LhapdfData {
             lock_file.lock_exclusive()?;
 
             for url in config.pdfset_urls() {
-                let response = ureq::get(&format!("{url}/{name}.tar.gz")).call();
+                let response =
+                    ureq::request_url("GET", &url.join(&format!("{name}.tar.gz"))?).call();
 
                 if let Err(ureq::Error::Status(404, _)) = response {
                     continue;
@@ -249,7 +262,7 @@ impl LhapdfData {
             ffi::empty_lhaindex();
 
             // download `pdfsets.index`
-            let content = ureq::get(config.pdfsets_index_url())
+            let content = ureq::request_url("GET", config.pdfsets_index_url())
                 .call()?
                 .into_string()?;
 
