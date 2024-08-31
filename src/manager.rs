@@ -44,6 +44,35 @@ pub struct Config {
     pdfset_urls: Vec<String>,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        let mut config = Self {
+            lhapdf_data_path_read: vec![],
+            lhapdf_data_path_write: dirs::data_dir()
+                // if the data directory doesn't exist, first try the current directory and then a
+                // temporary directory
+                .unwrap_or_else(|| env::current_dir().unwrap_or_else(|_| env::temp_dir()))
+                .join("managed-lhapdf"),
+            pdfsets_index_url: "https://lhapdfsets.web.cern.ch/current/pdfsets.index".to_owned(),
+            pdfset_urls: vec!["https://lhapdfsets.web.cern.ch/current/".to_owned()],
+        };
+
+        // if there's an environment variable that the user set use its value
+        if let Some(os_str) = env::var_os("LHAPDF_DATA_PATH").or_else(|| env::var_os("LHAPATH")) {
+            let mut lhapdf_paths: Vec<_> =
+                // UNWRAP: if the string isn't valid unicode we can't proceed
+                os_str.to_str().unwrap().split(':').map(PathBuf::from).collect();
+
+            // we'll use the first entry to write to
+            config.lhapdf_data_path_write = lhapdf_paths.remove(0);
+            // we'll read from the remaining directories
+            config.lhapdf_data_path_read = lhapdf_paths;
+        }
+
+        config
+    }
+}
+
 struct LhapdfData;
 
 impl Config {
@@ -74,27 +103,8 @@ impl Config {
                 // the file didn't exist before
                 Ok(mut file) => {
                     // use a default configuration
-                    let mut config = Self {
-                        lhapdf_data_path_read: vec![],
-                        lhapdf_data_path_write: dirs::data_dir()
-                            .ok_or_else(|| Error::General("no data directory found".to_owned()))?
-                            .join("managed-lhapdf"),
-                        pdfsets_index_url: "https://lhapdfsets.web.cern.ch/current/pdfsets.index"
-                            .to_owned(),
-                        pdfset_urls: vec!["https://lhapdfsets.web.cern.ch/current/".to_owned()],
-                    };
-
-                    // if there's an environment variable that the user set use its value
-                    if let Some(os_str) =
-                        env::var_os("LHAPDF_DATA_PATH").or_else(|| env::var_os("LHAPATH"))
-                    {
-                        config.lhapdf_data_path_read =
-                            // UNWRAP: if the string isn't valid unicode we can't proceed
-                            os_str.to_str().unwrap().split(':').map(PathBuf::from).collect();
-                    }
-
+                    let config = Config::default();
                     file.write_all(toml::to_string_pretty(&config)?.as_bytes())?;
-
                     config
                 }
                 Err(err) if err.kind() == ErrorKind::AlreadyExists => {
