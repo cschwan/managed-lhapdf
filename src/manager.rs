@@ -171,7 +171,7 @@ impl Config {
             // as long as `static Config _cfg` in LHAPDF's `src/Config.cc` is `static` and not
             // `thread_local`, this belongs here; otherwise move it out of the singleton
             // initialization
-            env::set_var("LHAPDF_DATA_PATH", lhapdf_data_path);
+            unsafe { env::set_var("LHAPDF_DATA_PATH", lhapdf_data_path) };
 
             Ok(config)
         });
