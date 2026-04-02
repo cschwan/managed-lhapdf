@@ -9,7 +9,7 @@ readme = "README.md"
 keywords = ["high-energy-physics", "physics"]
 categories = ["science"]
 description = "(Unofficial) Rust bindings for the LHAPDF C++ library"
-rust-version = "1.92.0"
+rust-version = "1.91.0"
 
 [dependencies]
 anyhow = "1.0.79"
