@@ -7,7 +7,6 @@ use super::unmanaged;
 use super::{Error, Result};
 use cxx::UniquePtr;
 use flate2::read::GzDecoder;
-use fs2::FileExt;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::ffi::OsString;
@@ -229,7 +228,7 @@ impl LhapdfData {
     fn download_set(&self, name: &str, config: &Config) -> Result<()> {
         if let Some(lhapdf_data_path_write) = config.lhapdf_data_path_write() {
             let lock_file = File::create(lhapdf_data_path_write.join(format!("{name}.lock")))?;
-            lock_file.lock_exclusive()?;
+            lock_file.lock()?;
 
             for url in config.pdfset_urls() {
                 let response = get_url(&url.join(&format!("{name}.tar.gz"))?);
@@ -254,7 +253,7 @@ impl LhapdfData {
     fn update_pdfsets_index(&self, config: &Config) -> Result<()> {
         if let Some(lhapdf_data_path_write) = config.lhapdf_data_path_write() {
             let lock_file = File::create(lhapdf_data_path_write.join("pdfsets.lock"))?;
-            lock_file.lock_exclusive()?;
+            lock_file.lock()?;
 
             // empty the `static thread_local` variable sitting in `getPDFIndex` to trigger the
             // re-initialization of this variable

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- remove dependency on `fs2` crate
+
 ## [0.4.1] - 02/04/2026
 
 - lower MSRV to 1.91.0
