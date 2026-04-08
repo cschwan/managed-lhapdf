@@ -2,7 +2,7 @@
 //! not being downloaded. In that case we do the best to download them from locations and to a
 //! directory specified in our configuration file.
 
-use super::ffi::{self, PDFSet, PDF};
+use super::ffi::{self, PDF, PDFSet};
 use super::unmanaged;
 use super::{Error, Result};
 use cxx::UniquePtr;

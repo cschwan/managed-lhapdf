@@ -14,7 +14,7 @@ mod manager {
     pub use super::unmanaged::*;
 }
 
-use cxx::{let_cxx_string, CxxVector, UniquePtr};
+use cxx::{CxxVector, UniquePtr, let_cxx_string};
 use std::fmt::{self, Formatter};
 
 pub use error::{Error, Result};

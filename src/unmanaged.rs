@@ -1,6 +1,6 @@
-use super::ffi::{self, PDFSet, PDF};
 use super::Result;
-use cxx::{let_cxx_string, UniquePtr};
+use super::ffi::{self, PDF, PDFSet};
+use cxx::{UniquePtr, let_cxx_string};
 
 pub fn pdf_name_and_member_via_lhaid(lhaid: i32) -> Option<(String, i32)> {
     let_cxx_string!(cxx_setname = "");
